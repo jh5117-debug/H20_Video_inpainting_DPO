@@ -1,0 +1,127 @@
+#!/usr/bin/env python
+# coding=utf-8
+"""
+validation_metrics.py  ─  轻量级验证指标 (PSNR / SSIM)
+
+核心计算逻辑调用 inference/metrics.py 中的 compute_psnr / compute_ssim。
+仅保留纯 CPU/numpy 计算的 PSNR 和 SSIM，适用于训练中 validation step 的定量指标输出。
+不加载任何额外 GPU 模型 (LPIPS/VBench/RAFT/I3D 等)。
+
+Usage:
+    from validation_metrics import compute_validation_metrics
+    results = compute_validation_metrics(pred_frames, gt_frames)
+"""
+
+import numpy as np
+import sys
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parents[2]
+if str(PROJECT_ROOT) not in sys.path:
+    sys.path.insert(0, str(PROJECT_ROOT))
+
+# 核心 PSNR/SSIM 计算来自 inference/metrics.py
+from inference.metrics import compute_psnr, compute_ssim
+
+
+def compute_validation_metrics(
+    pred_frames: list, gt_frames: list, video_name: str = "unknown"
+) -> dict:
+    """
+    对一组预测帧与 GT 帧逐帧计算 PSNR / SSIM 并取平均。
+
+    Args:
+        pred_frames: list of np.ndarray (H, W, 3), uint8 range [0, 255]
+        gt_frames:   list of np.ndarray (H, W, 3), uint8 range [0, 255]
+        video_name:  视频名称 (用于日志)
+
+    Returns:
+        dict: {"video_name": str, "psnr": float, "ssim": float, "num_frames": int}
+    """
+    assert len(pred_frames) == len(gt_frames), (
+        f"Frame count mismatch: pred={len(pred_frames)}, gt={len(gt_frames)}"
+    )
+
+    psnr_list = []
+    ssim_list = []
+    for pred, gt in zip(pred_frames, gt_frames):
+        pred = np.asarray(pred, dtype=np.uint8)
+        gt = np.asarray(gt, dtype=np.uint8)
+
+        # 确保尺寸一致
+        if pred.shape != gt.shape:
+            from PIL import Image
+            pred = np.array(Image.fromarray(pred).resize(
+                (gt.shape[1], gt.shape[0]), Image.BILINEAR
+            ))
+
+        psnr_list.append(compute_psnr(pred, gt))
+        ssim_list.append(compute_ssim(pred, gt))
+
+    return {
+        "video_name": video_name,
+        "psnr": float(np.mean(psnr_list)),
+        "ssim": float(np.mean(ssim_list)),
+        "num_frames": len(pred_frames),
+    }
+
+
+def compute_batch_metrics(
+    all_pred_frames: list, all_gt_frames: list, video_names: list
+) -> dict:
+    """
+    批量计算多个视频的 PSNR / SSIM。
+
+    Returns:
+        dict: {
+            "per_video": [{"video_name": str, "psnr": float, "ssim": float}, ...],
+            "psnr_mean": float,
+            "ssim_mean": float,
+        }
+    """
+    per_video = []
+    for pred_frames, gt_frames, name in zip(
+        all_pred_frames, all_gt_frames, video_names
+    ):
+        result = compute_validation_metrics(pred_frames, gt_frames, name)
+        per_video.append(result)
+
+    psnr_mean = float(np.mean([r["psnr"] for r in per_video]))
+    ssim_mean = float(np.mean([r["ssim"] for r in per_video]))
+
+    return {
+        "per_video": per_video,
+        "psnr_mean": psnr_mean,
+        "ssim_mean": ssim_mean,
+    }
+
+
+def format_metrics_table(batch_results: dict, step: int) -> str:
+    """
+    格式化指标为精美的 ASCII 表格。
+
+    Returns:
+        str: 可直接打印的表格字符串
+    """
+    sep = "─" * 45
+    header = f"{'Video':>12s}   {'PSNR ↑':>10s}   {'SSIM ↑':>10s}"
+    lines = [
+        "",
+        f"  {sep}",
+        f"  Validation Metrics @ Step {step}",
+        f"  {sep}",
+        f"  {header}",
+        f"  {sep}",
+    ]
+    for r in batch_results["per_video"]:
+        lines.append(
+            f"  {r['video_name']:>12s}   {r['psnr']:10.4f}   {r['ssim']:10.4f}"
+        )
+    lines.append(f"  {sep}")
+    lines.append(
+        f"  {'Average':>12s}   {batch_results['psnr_mean']:10.4f}   "
+        f"{batch_results['ssim_mean']:10.4f}"
+    )
+    lines.append(f"  {sep}")
+    lines.append("")
+    return "\n".join(lines)

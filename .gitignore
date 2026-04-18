@@ -9,10 +9,30 @@ venv/
 .DS_Store
 .ipynb_checkpoints/
 
+# External inputs and weights. Keep these out of Git.
+data/
+data_val/
+weights/
+
+# Experiment outputs. New runs should live under experiments/.
+experiments/
+finetune-stage1/
+finetune-stage2/
+dpo-finetune-stage1/
+dpo-finetune-stage2/
+converted_weights/
+
+# Runtime logs and caches.
 wandb/
 runs/
 outputs/
 checkpoints/
+logs/
+log/
+.wandb_cache/
+.hf_cache/
+.hf_repair_stage_dirs/
+*.out
 
 *.ckpt
 *.safetensors
