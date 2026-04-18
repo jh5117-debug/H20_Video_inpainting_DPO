@@ -1,0 +1,558 @@
+03/19/2026 10:11:02 - INFO - __main__ - ***** Running training *****
+03/19/2026 10:11:02 - INFO - __main__ -   Num examples = 4055
+03/19/2026 10:11:02 - INFO - __main__ -   Num batches each epoch (total) = 4055
+03/19/2026 10:11:02 - INFO - __main__ -   Num batches each epoch (per GPU, after distribute) = 507
+03/19/2026 10:11:02 - INFO - __main__ -   Num update steps per epoch = 507
+03/19/2026 10:11:02 - INFO - __main__ -   Num Epochs = 60
+03/19/2026 10:11:02 - INFO - __main__ -   Instantaneous batch size per device = 1
+03/19/2026 10:11:02 - INFO - __main__ -   Total train batch size (w. parallel, distributed & accumulation) = 8
+03/19/2026 10:11:02 - INFO - __main__ -   Gradient Accumulation steps = 1
+03/19/2026 10:11:02 - INFO - __main__ -   Total optimization steps = 30000
+03/19/2026 10:11:02 - INFO - __main__ - ====== Model Parameters ======
+03/19/2026 10:11:02 - INFO - __main__ -   unet_main      : total=  859.5M  trainable=  859.5M  frozen=    0.0M  [🔥 trainable]
+03/19/2026 10:11:02 - INFO - __main__ -   brushnet       : total=  886.1M  trainable=  886.1M  frozen=    0.0M  [🔥 trainable]
+03/19/2026 10:11:02 - INFO - __main__ -   vae            : total=   83.7M  trainable=    0.0M  frozen=   83.7M  [❄️ frozen]
+03/19/2026 10:11:02 - INFO - __main__ -   text_encoder   : total=  123.1M  trainable=    0.0M  frozen=  123.1M  [❄️ frozen]
+03/19/2026 10:11:02 - INFO - __main__ - ==============================
+Checkpoint 'latest' does not exist. Starting a new training run.
+Steps:   0%|          | 1/30000 [00:16<136:05:16, 16.33s/it]03/19/2026 10:11:18 - INFO - __main__ - Running validation...
+{'requires_safety_checker', 'brushnet', 'image_encoder'} was not found in config. Values will be initialized to default values.
+                                                                     {'prediction_type', 'timestep_spacing'} was not found in config. Values will be initialized to default values.
+Loaded scheduler as PNDMScheduler from `scheduler` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+Loaded safety_checker as StableDiffusionSafetyChecker from `safety_checker` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+                                                                             Loaded feature_extractor as CLIPImageProcessor from `feature_extractor` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+Loading pipeline components...: 100%|██████████| 7/7 [00:00<00:00, 12.03it/s]
+{'predict_x0', 'timestep_spacing', 'lower_order_final', 'rescale_betas_zero_snr', 'thresholding', 'solver_type', 'solver_p', 'solver_order', 'dynamic_thresholding_ratio', 'prediction_type', 'sample_max_value', 'use_karras_sigmas', 'final_sigmas_type', 'disable_corrector'} was not found in config. Values will be initialized to default values.
+03/19/2026 10:11:19 - INFO - __main__ - Found 50 validation videos in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/data_val/JPEGImages_432_240
+03/19/2026 10:14:59 - INFO - __main__ -
+=======================
+ Validation @ Step 1 (50 videos)
+=======================
+          |   PSNR   |   SSIM
+-----------------------
+   Avg    | 22.7386  |  0.8294
+=======================
+Steps:   7%|▋         | 2000/30000 [1:20:54<17:29:44,  2.25s/it, loss=0.0937, lr=5e-6]03/19/2026 11:31:56 - INFO - accelerate.accelerator - Saving current state to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-2000
+03/19/2026 11:32:11 - INFO - accelerate.checkpointing - Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-2000/model.safetensors
+03/19/2026 11:32:30 - INFO - accelerate.checkpointing - Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-2000/model_1.safetensors
+03/19/2026 11:33:08 - INFO - accelerate.checkpointing - Optimizer state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-2000/optimizer.bin
+03/19/2026 11:33:08 - INFO - accelerate.checkpointing - Scheduler state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-2000/scheduler.bin
+03/19/2026 11:33:08 - INFO - accelerate.checkpointing - Sampler state for dataloader 0 saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-2000/sampler.bin
+03/19/2026 11:33:08 - INFO - accelerate.checkpointing - Gradient scaler state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-2000/scaler.pt
+03/19/2026 11:33:08 - INFO - accelerate.checkpointing - Random states saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-2000/random_states_0.pkl
+03/19/2026 11:33:08 - INFO - __main__ - Saved state to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-2000
+Configuration saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step2000/unet_main/config.json
+Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step2000/unet_main/diffusion_pytorch_model.safetensors
+Configuration saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step2000/brushnet/config.json
+Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step2000/brushnet/diffusion_pytorch_model.safetensors
+03/19/2026 11:33:35 - INFO - __main__ - Converted weights saved to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step2000
+wandb: Adding directory to artifact (/sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step2000)... Done. 36.3s
+03/19/2026 11:34:14 - INFO - __main__ - Uploaded W&B Artifact: stage1-weights-step2000
+03/19/2026 11:34:14 - INFO - __main__ - Running validation...
+{'requires_safety_checker', 'brushnet', 'image_encoder'} was not found in config. Values will be initialized to default values.
+                                                                     {'prediction_type', 'timestep_spacing'} was not found in config. Values will be initialized to default values.
+Loaded scheduler as PNDMScheduler from `scheduler` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+Loaded safety_checker as StableDiffusionSafetyChecker from `safety_checker` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+                                                                             Loaded feature_extractor as CLIPImageProcessor from `feature_extractor` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+Loading pipeline components...: 100%|██████████| 7/7 [00:00<00:00, 13.89it/s]
+{'predict_x0', 'timestep_spacing', 'lower_order_final', 'rescale_betas_zero_snr', 'thresholding', 'solver_type', 'solver_p', 'solver_order', 'dynamic_thresholding_ratio', 'prediction_type', 'sample_max_value', 'use_karras_sigmas', 'final_sigmas_type', 'disable_corrector'} was not found in config. Values will be initialized to default values.
+03/19/2026 11:34:14 - INFO - __main__ - Found 50 validation videos in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/data_val/JPEGImages_432_240
+03/19/2026 11:37:55 - INFO - __main__ -
+=======================
+ Validation @ Step 2000 (50 videos)
+=======================
+          |   PSNR   |   SSIM
+-----------------------
+   Avg    | 23.2078  |  0.8400
+=======================
+Steps:  13%|█▎        | 4000/30000 [2:44:09<15:42:43,  2.18s/it, loss=0.00838, lr=5e-6]03/19/2026 12:55:12 - INFO - accelerate.accelerator - Saving current state to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-4000
+03/19/2026 12:55:26 - INFO - accelerate.checkpointing - Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-4000/model.safetensors
+03/19/2026 12:55:39 - INFO - accelerate.checkpointing - Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-4000/model_1.safetensors
+03/19/2026 12:56:17 - INFO - accelerate.checkpointing - Optimizer state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-4000/optimizer.bin
+03/19/2026 12:56:17 - INFO - accelerate.checkpointing - Scheduler state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-4000/scheduler.bin
+03/19/2026 12:56:17 - INFO - accelerate.checkpointing - Sampler state for dataloader 0 saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-4000/sampler.bin
+03/19/2026 12:56:17 - INFO - accelerate.checkpointing - Gradient scaler state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-4000/scaler.pt
+03/19/2026 12:56:17 - INFO - accelerate.checkpointing - Random states saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-4000/random_states_0.pkl
+03/19/2026 12:56:17 - INFO - __main__ - Saved state to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-4000
+Configuration saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step4000/unet_main/config.json
+Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step4000/unet_main/diffusion_pytorch_model.safetensors
+Configuration saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step4000/brushnet/config.json
+Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step4000/brushnet/diffusion_pytorch_model.safetensors
+03/19/2026 12:56:44 - INFO - __main__ - Converted weights saved to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step4000
+wandb: Adding directory to artifact (/sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step4000)... Done. 30.8s
+03/19/2026 12:57:15 - INFO - __main__ - Uploaded W&B Artifact: stage1-weights-step4000
+03/19/2026 12:57:15 - INFO - __main__ - Running validation...
+{'requires_safety_checker', 'brushnet', 'image_encoder'} was not found in config. Values will be initialized to default values.
+                                                                     {'prediction_type', 'timestep_spacing'} was not found in config. Values will be initialized to default values.
+Loaded scheduler as PNDMScheduler from `scheduler` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+Loaded safety_checker as StableDiffusionSafetyChecker from `safety_checker` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+                                                                             Loaded feature_extractor as CLIPImageProcessor from `feature_extractor` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+Loading pipeline components...: 100%|██████████| 7/7 [00:00<00:00, 15.37it/s]
+{'predict_x0', 'timestep_spacing', 'lower_order_final', 'rescale_betas_zero_snr', 'thresholding', 'solver_type', 'solver_p', 'solver_order', 'dynamic_thresholding_ratio', 'prediction_type', 'sample_max_value', 'use_karras_sigmas', 'final_sigmas_type', 'disable_corrector'} was not found in config. Values will be initialized to default values.
+03/19/2026 12:57:16 - INFO - __main__ - Found 50 validation videos in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/data_val/JPEGImages_432_240
+03/19/2026 13:00:57 - INFO - __main__ -
+=======================
+ Validation @ Step 4000 (50 videos)
+=======================
+          |   PSNR   |   SSIM
+-----------------------
+   Avg    | 23.3273  |  0.8422
+=======================
+Steps:  20%|██        | 6000/30000 [4:07:09<14:08:26,  2.12s/it, loss=0.0124, lr=5e-6]03/19/2026 14:18:11 - INFO - accelerate.accelerator - Saving current state to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-6000
+03/19/2026 14:18:28 - INFO - accelerate.checkpointing - Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-6000/model.safetensors
+03/19/2026 14:18:44 - INFO - accelerate.checkpointing - Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-6000/model_1.safetensors
+03/19/2026 14:19:16 - INFO - accelerate.checkpointing - Optimizer state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-6000/optimizer.bin
+03/19/2026 14:19:16 - INFO - accelerate.checkpointing - Scheduler state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-6000/scheduler.bin
+03/19/2026 14:19:16 - INFO - accelerate.checkpointing - Sampler state for dataloader 0 saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-6000/sampler.bin
+03/19/2026 14:19:16 - INFO - accelerate.checkpointing - Gradient scaler state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-6000/scaler.pt
+03/19/2026 14:19:16 - INFO - accelerate.checkpointing - Random states saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-6000/random_states_0.pkl
+03/19/2026 14:19:16 - INFO - __main__ - Saved state to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-6000
+Configuration saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step6000/unet_main/config.json
+Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step6000/unet_main/diffusion_pytorch_model.safetensors
+Configuration saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step6000/brushnet/config.json
+Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step6000/brushnet/diffusion_pytorch_model.safetensors
+03/19/2026 14:19:49 - INFO - __main__ - Converted weights saved to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step6000
+wandb: Adding directory to artifact (/sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step6000)... Done. 37.7s
+03/19/2026 14:20:27 - INFO - __main__ - Uploaded W&B Artifact: stage1-weights-step6000
+03/19/2026 14:20:27 - INFO - __main__ - Running validation...
+{'requires_safety_checker', 'brushnet', 'image_encoder'} was not found in config. Values will be initialized to default values.
+                                                                     {'prediction_type', 'timestep_spacing'} was not found in config. Values will be initialized to default values.
+Loaded scheduler as PNDMScheduler from `scheduler` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+Loaded safety_checker as StableDiffusionSafetyChecker from `safety_checker` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+                                                                             Loaded feature_extractor as CLIPImageProcessor from `feature_extractor` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+Loading pipeline components...: 100%|██████████| 7/7 [00:00<00:00, 14.90it/s]
+{'predict_x0', 'timestep_spacing', 'lower_order_final', 'rescale_betas_zero_snr', 'thresholding', 'solver_type', 'solver_p', 'solver_order', 'dynamic_thresholding_ratio', 'prediction_type', 'sample_max_value', 'use_karras_sigmas', 'final_sigmas_type', 'disable_corrector'} was not found in config. Values will be initialized to default values.
+03/19/2026 14:20:28 - INFO - __main__ - Found 50 validation videos in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/data_val/JPEGImages_432_240
+03/19/2026 14:24:09 - INFO - __main__ -
+=======================
+ Validation @ Step 6000 (50 videos)
+=======================
+          |   PSNR   |   SSIM
+-----------------------
+   Avg    | 23.3306  |  0.8431
+=======================
+Steps:  27%|██▋       | 8000/30000 [5:30:03<13:23:26,  2.19s/it, loss=0.00761, lr=5e-6]03/19/2026 15:41:06 - INFO - __main__ - 3 checkpoints already exist, removing 1 checkpoints
+03/19/2026 15:41:06 - INFO - __main__ - removing checkpoints: checkpoint-2000
+03/19/2026 15:41:07 - INFO - accelerate.accelerator - Saving current state to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-8000
+03/19/2026 15:41:20 - INFO - accelerate.checkpointing - Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-8000/model.safetensors
+03/19/2026 15:41:35 - INFO - accelerate.checkpointing - Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-8000/model_1.safetensors
+03/19/2026 15:42:09 - INFO - accelerate.checkpointing - Optimizer state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-8000/optimizer.bin
+03/19/2026 15:42:09 - INFO - accelerate.checkpointing - Scheduler state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-8000/scheduler.bin
+03/19/2026 15:42:09 - INFO - accelerate.checkpointing - Sampler state for dataloader 0 saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-8000/sampler.bin
+03/19/2026 15:42:09 - INFO - accelerate.checkpointing - Gradient scaler state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-8000/scaler.pt
+03/19/2026 15:42:09 - INFO - accelerate.checkpointing - Random states saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-8000/random_states_0.pkl
+03/19/2026 15:42:09 - INFO - __main__ - Saved state to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-8000
+Configuration saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step8000/unet_main/config.json
+Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step8000/unet_main/diffusion_pytorch_model.safetensors
+Configuration saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step8000/brushnet/config.json
+Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step8000/brushnet/diffusion_pytorch_model.safetensors
+03/19/2026 15:42:39 - INFO - __main__ - Converted weights saved to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step8000
+wandb: Adding directory to artifact (/sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step8000)... Done. 34.0s
+03/19/2026 15:43:14 - INFO - __main__ - Uploaded W&B Artifact: stage1-weights-step8000
+03/19/2026 15:43:14 - INFO - __main__ - Running validation...
+{'requires_safety_checker', 'brushnet', 'image_encoder'} was not found in config. Values will be initialized to default values.
+                                                                     {'prediction_type', 'timestep_spacing'} was not found in config. Values will be initialized to default values.
+Loaded scheduler as PNDMScheduler from `scheduler` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+Loaded safety_checker as StableDiffusionSafetyChecker from `safety_checker` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+                                                                             Loaded feature_extractor as CLIPImageProcessor from `feature_extractor` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+Loading pipeline components...: 100%|██████████| 7/7 [00:00<00:00, 15.21it/s]
+{'predict_x0', 'timestep_spacing', 'lower_order_final', 'rescale_betas_zero_snr', 'thresholding', 'solver_type', 'solver_p', 'solver_order', 'dynamic_thresholding_ratio', 'prediction_type', 'sample_max_value', 'use_karras_sigmas', 'final_sigmas_type', 'disable_corrector'} was not found in config. Values will be initialized to default values.
+03/19/2026 15:43:14 - INFO - __main__ - Found 50 validation videos in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/data_val/JPEGImages_432_240
+03/19/2026 15:46:55 - INFO - __main__ -
+=======================
+ Validation @ Step 8000 (50 videos)
+=======================
+          |   PSNR   |   SSIM
+-----------------------
+   Avg    | 23.3809  |  0.8434
+=======================
+Steps:  33%|███▎      | 10000/30000 [6:53:06<12:22:55,  2.23s/it, loss=0.000664, lr=5e-6]03/19/2026 17:04:08 - INFO - __main__ - 3 checkpoints already exist, removing 1 checkpoints
+03/19/2026 17:04:08 - INFO - __main__ - removing checkpoints: checkpoint-4000
+03/19/2026 17:04:09 - INFO - accelerate.accelerator - Saving current state to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-10000
+03/19/2026 17:04:30 - INFO - accelerate.checkpointing - Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-10000/model.safetensors
+03/19/2026 17:04:47 - INFO - accelerate.checkpointing - Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-10000/model_1.safetensors
+03/19/2026 17:05:20 - INFO - accelerate.checkpointing - Optimizer state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-10000/optimizer.bin
+03/19/2026 17:05:20 - INFO - accelerate.checkpointing - Scheduler state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-10000/scheduler.bin
+03/19/2026 17:05:20 - INFO - accelerate.checkpointing - Sampler state for dataloader 0 saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-10000/sampler.bin
+03/19/2026 17:05:20 - INFO - accelerate.checkpointing - Gradient scaler state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-10000/scaler.pt
+03/19/2026 17:05:20 - INFO - accelerate.checkpointing - Random states saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-10000/random_states_0.pkl
+03/19/2026 17:05:20 - INFO - __main__ - Saved state to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-10000
+Configuration saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step10000/unet_main/config.json
+Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step10000/unet_main/diffusion_pytorch_model.safetensors
+Configuration saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step10000/brushnet/config.json
+Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step10000/brushnet/diffusion_pytorch_model.safetensors
+03/19/2026 17:05:51 - INFO - __main__ - Converted weights saved to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step10000
+wandb: Adding directory to artifact (/sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step10000)... Done. 35.1s
+03/19/2026 17:06:27 - INFO - __main__ - Uploaded W&B Artifact: stage1-weights-step10000
+03/19/2026 17:06:27 - INFO - __main__ - Running validation...
+{'requires_safety_checker', 'brushnet', 'image_encoder'} was not found in config. Values will be initialized to default values.
+                                                                     {'prediction_type', 'timestep_spacing'} was not found in config. Values will be initialized to default values.
+Loaded scheduler as PNDMScheduler from `scheduler` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+Loaded safety_checker as StableDiffusionSafetyChecker from `safety_checker` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+                                                                             Loaded feature_extractor as CLIPImageProcessor from `feature_extractor` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+Loading pipeline components...: 100%|██████████| 7/7 [00:00<00:00, 15.87it/s]
+{'predict_x0', 'timestep_spacing', 'lower_order_final', 'rescale_betas_zero_snr', 'thresholding', 'solver_type', 'solver_p', 'solver_order', 'dynamic_thresholding_ratio', 'prediction_type', 'sample_max_value', 'use_karras_sigmas', 'final_sigmas_type', 'disable_corrector'} was not found in config. Values will be initialized to default values.
+03/19/2026 17:06:28 - INFO - __main__ - Found 50 validation videos in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/data_val/JPEGImages_432_240
+03/19/2026 17:10:08 - INFO - __main__ -
+=======================
+ Validation @ Step 10000 (50 videos)
+=======================
+          |   PSNR   |   SSIM
+-----------------------
+   Avg    | 23.4023  |  0.8441
+=======================
+Steps:  40%|████      | 12000/30000 [8:16:05<10:56:58,  2.19s/it, loss=0.000577, lr=5e-6]03/19/2026 18:27:07 - INFO - __main__ - 3 checkpoints already exist, removing 1 checkpoints
+03/19/2026 18:27:07 - INFO - __main__ - removing checkpoints: checkpoint-6000
+03/19/2026 18:27:08 - INFO - accelerate.accelerator - Saving current state to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-12000
+03/19/2026 18:27:21 - INFO - accelerate.checkpointing - Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-12000/model.safetensors
+03/19/2026 18:27:34 - INFO - accelerate.checkpointing - Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-12000/model_1.safetensors
+03/19/2026 18:28:05 - INFO - accelerate.checkpointing - Optimizer state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-12000/optimizer.bin
+03/19/2026 18:28:05 - INFO - accelerate.checkpointing - Scheduler state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-12000/scheduler.bin
+03/19/2026 18:28:05 - INFO - accelerate.checkpointing - Sampler state for dataloader 0 saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-12000/sampler.bin
+03/19/2026 18:28:05 - INFO - accelerate.checkpointing - Gradient scaler state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-12000/scaler.pt
+03/19/2026 18:28:05 - INFO - accelerate.checkpointing - Random states saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-12000/random_states_0.pkl
+03/19/2026 18:28:05 - INFO - __main__ - Saved state to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-12000
+Configuration saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step12000/unet_main/config.json
+Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step12000/unet_main/diffusion_pytorch_model.safetensors
+Configuration saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step12000/brushnet/config.json
+Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step12000/brushnet/diffusion_pytorch_model.safetensors
+03/19/2026 18:28:30 - INFO - __main__ - Converted weights saved to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step12000
+wandb: Adding directory to artifact (/sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step12000)... Done. 28.6s
+03/19/2026 18:28:59 - INFO - __main__ - Uploaded W&B Artifact: stage1-weights-step12000
+03/19/2026 18:28:59 - INFO - __main__ - Running validation...
+{'requires_safety_checker', 'brushnet', 'image_encoder'} was not found in config. Values will be initialized to default values.
+                                                                     {'prediction_type', 'timestep_spacing'} was not found in config. Values will be initialized to default values.
+Loaded scheduler as PNDMScheduler from `scheduler` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+Loaded safety_checker as StableDiffusionSafetyChecker from `safety_checker` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+                                                                             Loaded feature_extractor as CLIPImageProcessor from `feature_extractor` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+Loading pipeline components...: 100%|██████████| 7/7 [00:00<00:00, 15.15it/s]
+{'predict_x0', 'timestep_spacing', 'lower_order_final', 'rescale_betas_zero_snr', 'thresholding', 'solver_type', 'solver_p', 'solver_order', 'dynamic_thresholding_ratio', 'prediction_type', 'sample_max_value', 'use_karras_sigmas', 'final_sigmas_type', 'disable_corrector'} was not found in config. Values will be initialized to default values.
+03/19/2026 18:29:00 - INFO - __main__ - Found 50 validation videos in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/data_val/JPEGImages_432_240
+03/19/2026 18:32:42 - INFO - __main__ -
+=======================
+ Validation @ Step 12000 (50 videos)
+=======================
+          |   PSNR   |   SSIM
+-----------------------
+   Avg    | 23.3827  |  0.8440
+=======================
+Steps:  47%|████▋     | 14000/30000 [9:38:48<11:38:29,  2.62s/it, loss=0.0661, lr=5e-6]03/19/2026 19:49:50 - INFO - __main__ - 3 checkpoints already exist, removing 1 checkpoints
+03/19/2026 19:49:50 - INFO - __main__ - removing checkpoints: checkpoint-8000
+03/19/2026 19:49:51 - INFO - accelerate.accelerator - Saving current state to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-14000
+03/19/2026 19:50:04 - INFO - accelerate.checkpointing - Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-14000/model.safetensors
+03/19/2026 19:50:19 - INFO - accelerate.checkpointing - Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-14000/model_1.safetensors
+03/19/2026 19:50:48 - INFO - accelerate.checkpointing - Optimizer state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-14000/optimizer.bin
+03/19/2026 19:50:48 - INFO - accelerate.checkpointing - Scheduler state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-14000/scheduler.bin
+03/19/2026 19:50:48 - INFO - accelerate.checkpointing - Sampler state for dataloader 0 saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-14000/sampler.bin
+03/19/2026 19:50:48 - INFO - accelerate.checkpointing - Gradient scaler state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-14000/scaler.pt
+03/19/2026 19:50:48 - INFO - accelerate.checkpointing - Random states saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-14000/random_states_0.pkl
+03/19/2026 19:50:48 - INFO - __main__ - Saved state to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-14000
+Configuration saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step14000/unet_main/config.json
+Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step14000/unet_main/diffusion_pytorch_model.safetensors
+Configuration saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step14000/brushnet/config.json
+Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step14000/brushnet/diffusion_pytorch_model.safetensors
+03/19/2026 19:51:14 - INFO - __main__ - Converted weights saved to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step14000
+wandb: Adding directory to artifact (/sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step14000)... Done. 27.7s
+03/19/2026 19:51:42 - INFO - __main__ - Uploaded W&B Artifact: stage1-weights-step14000
+03/19/2026 19:51:42 - INFO - __main__ - Running validation...
+{'requires_safety_checker', 'brushnet', 'image_encoder'} was not found in config. Values will be initialized to default values.
+                                                                     {'prediction_type', 'timestep_spacing'} was not found in config. Values will be initialized to default values.
+Loaded scheduler as PNDMScheduler from `scheduler` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+Loaded safety_checker as StableDiffusionSafetyChecker from `safety_checker` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+                                                                             Loaded feature_extractor as CLIPImageProcessor from `feature_extractor` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+Loading pipeline components...: 100%|██████████| 7/7 [00:00<00:00, 15.35it/s]
+{'predict_x0', 'timestep_spacing', 'lower_order_final', 'rescale_betas_zero_snr', 'thresholding', 'solver_type', 'solver_p', 'solver_order', 'dynamic_thresholding_ratio', 'prediction_type', 'sample_max_value', 'use_karras_sigmas', 'final_sigmas_type', 'disable_corrector'} was not found in config. Values will be initialized to default values.
+03/19/2026 19:51:43 - INFO - __main__ - Found 50 validation videos in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/data_val/JPEGImages_432_240
+03/19/2026 19:55:24 - INFO - __main__ -
+=======================
+ Validation @ Step 14000 (50 videos)
+=======================
+          |   PSNR   |   SSIM
+-----------------------
+   Avg    | 23.3802  |  0.8437
+=======================
+Steps:  53%|█████▎    | 16000/30000 [11:01:18<10:24:25,  2.68s/it, loss=0.00207, lr=5e-6]03/19/2026 21:12:20 - INFO - __main__ - 3 checkpoints already exist, removing 1 checkpoints
+03/19/2026 21:12:20 - INFO - __main__ - removing checkpoints: checkpoint-10000
+03/19/2026 21:12:21 - INFO - accelerate.accelerator - Saving current state to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-16000
+03/19/2026 21:12:34 - INFO - accelerate.checkpointing - Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-16000/model.safetensors
+03/19/2026 21:12:46 - INFO - accelerate.checkpointing - Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-16000/model_1.safetensors
+03/19/2026 21:13:14 - INFO - accelerate.checkpointing - Optimizer state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-16000/optimizer.bin
+03/19/2026 21:13:14 - INFO - accelerate.checkpointing - Scheduler state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-16000/scheduler.bin
+03/19/2026 21:13:14 - INFO - accelerate.checkpointing - Sampler state for dataloader 0 saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-16000/sampler.bin
+03/19/2026 21:13:14 - INFO - accelerate.checkpointing - Gradient scaler state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-16000/scaler.pt
+03/19/2026 21:13:14 - INFO - accelerate.checkpointing - Random states saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-16000/random_states_0.pkl
+03/19/2026 21:13:14 - INFO - __main__ - Saved state to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-16000
+Configuration saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step16000/unet_main/config.json
+Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step16000/unet_main/diffusion_pytorch_model.safetensors
+Configuration saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step16000/brushnet/config.json
+Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step16000/brushnet/diffusion_pytorch_model.safetensors
+03/19/2026 21:13:41 - INFO - __main__ - Converted weights saved to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step16000
+wandb: Adding directory to artifact (/sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step16000)... Done. 32.3s
+03/19/2026 21:14:14 - INFO - __main__ - Uploaded W&B Artifact: stage1-weights-step16000
+03/19/2026 21:14:14 - INFO - __main__ - Running validation...
+{'requires_safety_checker', 'brushnet', 'image_encoder'} was not found in config. Values will be initialized to default values.
+                                                                     {'prediction_type', 'timestep_spacing'} was not found in config. Values will be initialized to default values.
+Loaded scheduler as PNDMScheduler from `scheduler` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+Loaded safety_checker as StableDiffusionSafetyChecker from `safety_checker` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+                                                                             Loaded feature_extractor as CLIPImageProcessor from `feature_extractor` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+Loading pipeline components...: 100%|██████████| 7/7 [00:00<00:00, 14.63it/s]
+{'predict_x0', 'timestep_spacing', 'lower_order_final', 'rescale_betas_zero_snr', 'thresholding', 'solver_type', 'solver_p', 'solver_order', 'dynamic_thresholding_ratio', 'prediction_type', 'sample_max_value', 'use_karras_sigmas', 'final_sigmas_type', 'disable_corrector'} was not found in config. Values will be initialized to default values.
+03/19/2026 21:14:14 - INFO - __main__ - Found 50 validation videos in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/data_val/JPEGImages_432_240
+03/19/2026 21:17:55 - INFO - __main__ -
+=======================
+ Validation @ Step 16000 (50 videos)
+=======================
+          |   PSNR   |   SSIM
+-----------------------
+   Avg    | 23.4207  |  0.8440
+=======================
+Steps:  60%|██████    | 18000/30000 [12:24:20<8:20:28,  2.50s/it, loss=5.03e-5, lr=5e-6]03/19/2026 22:35:22 - INFO - __main__ - 3 checkpoints already exist, removing 1 checkpoints
+03/19/2026 22:35:22 - INFO - __main__ - removing checkpoints: checkpoint-12000
+03/19/2026 22:35:23 - INFO - accelerate.accelerator - Saving current state to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-18000
+03/19/2026 22:35:36 - INFO - accelerate.checkpointing - Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-18000/model.safetensors
+03/19/2026 22:35:50 - INFO - accelerate.checkpointing - Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-18000/model_1.safetensors
+03/19/2026 22:36:20 - INFO - accelerate.checkpointing - Optimizer state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-18000/optimizer.bin
+03/19/2026 22:36:20 - INFO - accelerate.checkpointing - Scheduler state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-18000/scheduler.bin
+03/19/2026 22:36:20 - INFO - accelerate.checkpointing - Sampler state for dataloader 0 saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-18000/sampler.bin
+03/19/2026 22:36:20 - INFO - accelerate.checkpointing - Gradient scaler state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-18000/scaler.pt
+03/19/2026 22:36:20 - INFO - accelerate.checkpointing - Random states saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-18000/random_states_0.pkl
+03/19/2026 22:36:20 - INFO - __main__ - Saved state to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-18000
+Configuration saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step18000/unet_main/config.json
+Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step18000/unet_main/diffusion_pytorch_model.safetensors
+Configuration saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step18000/brushnet/config.json
+Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step18000/brushnet/diffusion_pytorch_model.safetensors
+03/19/2026 22:36:47 - INFO - __main__ - Converted weights saved to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step18000
+wandb: Adding directory to artifact (/sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step18000)... Done. 31.2s
+03/19/2026 22:37:18 - INFO - __main__ - Uploaded W&B Artifact: stage1-weights-step18000
+03/19/2026 22:37:18 - INFO - __main__ - Running validation...
+{'requires_safety_checker', 'brushnet', 'image_encoder'} was not found in config. Values will be initialized to default values.
+                                                                     {'prediction_type', 'timestep_spacing'} was not found in config. Values will be initialized to default values.
+Loaded scheduler as PNDMScheduler from `scheduler` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+Loaded safety_checker as StableDiffusionSafetyChecker from `safety_checker` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+                                                                             Loaded feature_extractor as CLIPImageProcessor from `feature_extractor` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+Loading pipeline components...: 100%|██████████| 7/7 [00:00<00:00, 15.40it/s]
+{'predict_x0', 'timestep_spacing', 'lower_order_final', 'rescale_betas_zero_snr', 'thresholding', 'solver_type', 'solver_p', 'solver_order', 'dynamic_thresholding_ratio', 'prediction_type', 'sample_max_value', 'use_karras_sigmas', 'final_sigmas_type', 'disable_corrector'} was not found in config. Values will be initialized to default values.
+03/19/2026 22:37:19 - INFO - __main__ - Found 50 validation videos in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/data_val/JPEGImages_432_240
+03/19/2026 22:41:00 - INFO - __main__ -
+=======================
+ Validation @ Step 18000 (50 videos)
+=======================
+          |   PSNR   |   SSIM
+-----------------------
+   Avg    | 23.2788  |  0.8415
+=======================
+Steps:  67%|██████▋   | 20000/30000 [13:46:54<6:28:05,  2.33s/it, loss=0.0151, lr=5e-6]03/19/2026 23:57:56 - INFO - __main__ - 3 checkpoints already exist, removing 1 checkpoints
+03/19/2026 23:57:56 - INFO - __main__ - removing checkpoints: checkpoint-14000
+03/19/2026 23:57:57 - INFO - accelerate.accelerator - Saving current state to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-20000
+03/19/2026 23:58:10 - INFO - accelerate.checkpointing - Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-20000/model.safetensors
+03/19/2026 23:58:23 - INFO - accelerate.checkpointing - Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-20000/model_1.safetensors
+03/19/2026 23:58:51 - INFO - accelerate.checkpointing - Optimizer state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-20000/optimizer.bin
+03/19/2026 23:58:51 - INFO - accelerate.checkpointing - Scheduler state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-20000/scheduler.bin
+03/19/2026 23:58:51 - INFO - accelerate.checkpointing - Sampler state for dataloader 0 saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-20000/sampler.bin
+03/19/2026 23:58:51 - INFO - accelerate.checkpointing - Gradient scaler state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-20000/scaler.pt
+03/19/2026 23:58:51 - INFO - accelerate.checkpointing - Random states saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-20000/random_states_0.pkl
+03/19/2026 23:58:51 - INFO - __main__ - Saved state to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-20000
+Configuration saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step20000/unet_main/config.json
+Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step20000/unet_main/diffusion_pytorch_model.safetensors
+Configuration saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step20000/brushnet/config.json
+Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step20000/brushnet/diffusion_pytorch_model.safetensors
+03/19/2026 23:59:17 - INFO - __main__ - Converted weights saved to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step20000
+wandb: Adding directory to artifact (/sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step20000)... Done. 28.9s
+03/19/2026 23:59:46 - INFO - __main__ - Uploaded W&B Artifact: stage1-weights-step20000
+03/19/2026 23:59:46 - INFO - __main__ - Running validation...
+{'requires_safety_checker', 'brushnet', 'image_encoder'} was not found in config. Values will be initialized to default values.
+                                                                     {'prediction_type', 'timestep_spacing'} was not found in config. Values will be initialized to default values.
+Loaded scheduler as PNDMScheduler from `scheduler` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+Loaded safety_checker as StableDiffusionSafetyChecker from `safety_checker` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+                                                                             Loaded feature_extractor as CLIPImageProcessor from `feature_extractor` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+Loading pipeline components...: 100%|██████████| 7/7 [00:00<00:00, 15.03it/s]
+{'predict_x0', 'timestep_spacing', 'lower_order_final', 'rescale_betas_zero_snr', 'thresholding', 'solver_type', 'solver_p', 'solver_order', 'dynamic_thresholding_ratio', 'prediction_type', 'sample_max_value', 'use_karras_sigmas', 'final_sigmas_type', 'disable_corrector'} was not found in config. Values will be initialized to default values.
+03/19/2026 23:59:47 - INFO - __main__ - Found 50 validation videos in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/data_val/JPEGImages_432_240
+03/20/2026 00:03:28 - INFO - __main__ -
+=======================
+ Validation @ Step 20000 (50 videos)
+=======================
+          |   PSNR   |   SSIM
+-----------------------
+   Avg    | 23.3256  |  0.8423
+=======================
+Steps:  73%|███████▎  | 22000/30000 [15:09:39<4:46:45,  2.15s/it, loss=0.00167, lr=5e-6]03/20/2026 01:20:41 - INFO - __main__ - 3 checkpoints already exist, removing 1 checkpoints
+03/20/2026 01:20:41 - INFO - __main__ - removing checkpoints: checkpoint-16000
+03/20/2026 01:20:42 - INFO - accelerate.accelerator - Saving current state to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-22000
+03/20/2026 01:20:57 - INFO - accelerate.checkpointing - Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-22000/model.safetensors
+03/20/2026 01:21:13 - INFO - accelerate.checkpointing - Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-22000/model_1.safetensors
+03/20/2026 01:21:45 - INFO - accelerate.checkpointing - Optimizer state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-22000/optimizer.bin
+03/20/2026 01:21:45 - INFO - accelerate.checkpointing - Scheduler state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-22000/scheduler.bin
+03/20/2026 01:21:45 - INFO - accelerate.checkpointing - Sampler state for dataloader 0 saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-22000/sampler.bin
+03/20/2026 01:21:45 - INFO - accelerate.checkpointing - Gradient scaler state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-22000/scaler.pt
+03/20/2026 01:21:45 - INFO - accelerate.checkpointing - Random states saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-22000/random_states_0.pkl
+03/20/2026 01:21:45 - INFO - __main__ - Saved state to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-22000
+Configuration saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step22000/unet_main/config.json
+Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step22000/unet_main/diffusion_pytorch_model.safetensors
+Configuration saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step22000/brushnet/config.json
+Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step22000/brushnet/diffusion_pytorch_model.safetensors
+03/20/2026 01:22:14 - INFO - __main__ - Converted weights saved to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step22000
+wandb: Adding directory to artifact (/sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step22000)... Done. 32.7s
+03/20/2026 01:22:47 - INFO - __main__ - Uploaded W&B Artifact: stage1-weights-step22000
+03/20/2026 01:22:47 - INFO - __main__ - Running validation...
+{'requires_safety_checker', 'brushnet', 'image_encoder'} was not found in config. Values will be initialized to default values.
+                                                                     {'prediction_type', 'timestep_spacing'} was not found in config. Values will be initialized to default values.
+Loaded scheduler as PNDMScheduler from `scheduler` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+Loaded safety_checker as StableDiffusionSafetyChecker from `safety_checker` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+                                                                             Loaded feature_extractor as CLIPImageProcessor from `feature_extractor` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+Loading pipeline components...: 100%|██████████| 7/7 [00:00<00:00, 15.70it/s]
+{'predict_x0', 'timestep_spacing', 'lower_order_final', 'rescale_betas_zero_snr', 'thresholding', 'solver_type', 'solver_p', 'solver_order', 'dynamic_thresholding_ratio', 'prediction_type', 'sample_max_value', 'use_karras_sigmas', 'final_sigmas_type', 'disable_corrector'} was not found in config. Values will be initialized to default values.
+03/20/2026 01:22:48 - INFO - __main__ - Found 50 validation videos in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/data_val/JPEGImages_432_240
+03/20/2026 01:26:28 - INFO - __main__ -
+=======================
+ Validation @ Step 22000 (50 videos)
+=======================
+          |   PSNR   |   SSIM
+-----------------------
+   Avg    | 23.3303  |  0.8425
+=======================
+Steps:  80%|████████  | 24000/30000 [16:32:22<3:58:07,  2.38s/it, loss=0.00343, lr=5e-6]03/20/2026 02:43:25 - INFO - __main__ - 3 checkpoints already exist, removing 1 checkpoints
+03/20/2026 02:43:25 - INFO - __main__ - removing checkpoints: checkpoint-18000
+03/20/2026 02:43:26 - INFO - accelerate.accelerator - Saving current state to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-24000
+03/20/2026 02:43:40 - INFO - accelerate.checkpointing - Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-24000/model.safetensors
+03/20/2026 02:43:54 - INFO - accelerate.checkpointing - Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-24000/model_1.safetensors
+03/20/2026 02:44:25 - INFO - accelerate.checkpointing - Optimizer state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-24000/optimizer.bin
+03/20/2026 02:44:25 - INFO - accelerate.checkpointing - Scheduler state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-24000/scheduler.bin
+03/20/2026 02:44:25 - INFO - accelerate.checkpointing - Sampler state for dataloader 0 saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-24000/sampler.bin
+03/20/2026 02:44:25 - INFO - accelerate.checkpointing - Gradient scaler state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-24000/scaler.pt
+03/20/2026 02:44:25 - INFO - accelerate.checkpointing - Random states saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-24000/random_states_0.pkl
+03/20/2026 02:44:25 - INFO - __main__ - Saved state to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-24000
+Configuration saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step24000/unet_main/config.json
+Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step24000/unet_main/diffusion_pytorch_model.safetensors
+Configuration saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step24000/brushnet/config.json
+Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step24000/brushnet/diffusion_pytorch_model.safetensors
+03/20/2026 02:44:51 - INFO - __main__ - Converted weights saved to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step24000
+wandb: Adding directory to artifact (/sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step24000)... Done. 27.7s
+03/20/2026 02:45:19 - INFO - __main__ - Uploaded W&B Artifact: stage1-weights-step24000
+03/20/2026 02:45:19 - INFO - __main__ - Running validation...
+{'requires_safety_checker', 'brushnet', 'image_encoder'} was not found in config. Values will be initialized to default values.
+                                                                     {'prediction_type', 'timestep_spacing'} was not found in config. Values will be initialized to default values.
+Loaded scheduler as PNDMScheduler from `scheduler` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+Loaded safety_checker as StableDiffusionSafetyChecker from `safety_checker` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+                                                                             Loaded feature_extractor as CLIPImageProcessor from `feature_extractor` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+Loading pipeline components...: 100%|██████████| 7/7 [00:00<00:00, 15.69it/s]
+{'predict_x0', 'timestep_spacing', 'lower_order_final', 'rescale_betas_zero_snr', 'thresholding', 'solver_type', 'solver_p', 'solver_order', 'dynamic_thresholding_ratio', 'prediction_type', 'sample_max_value', 'use_karras_sigmas', 'final_sigmas_type', 'disable_corrector'} was not found in config. Values will be initialized to default values.
+03/20/2026 02:45:20 - INFO - __main__ - Found 50 validation videos in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/data_val/JPEGImages_432_240
+03/20/2026 02:49:01 - INFO - __main__ -
+=======================
+ Validation @ Step 24000 (50 videos)
+=======================
+          |   PSNR   |   SSIM
+-----------------------
+   Avg    | 23.3202  |  0.8429
+=======================
+Steps:  87%|████████▋ | 26000/30000 [17:54:54<2:33:15,  2.30s/it, loss=0.00013, lr=5e-6]03/20/2026 04:05:56 - INFO - __main__ - 3 checkpoints already exist, removing 1 checkpoints
+03/20/2026 04:05:56 - INFO - __main__ - removing checkpoints: checkpoint-20000
+03/20/2026 04:05:57 - INFO - accelerate.accelerator - Saving current state to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-26000
+03/20/2026 04:06:12 - INFO - accelerate.checkpointing - Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-26000/model.safetensors
+03/20/2026 04:06:25 - INFO - accelerate.checkpointing - Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-26000/model_1.safetensors
+03/20/2026 04:06:56 - INFO - accelerate.checkpointing - Optimizer state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-26000/optimizer.bin
+03/20/2026 04:06:56 - INFO - accelerate.checkpointing - Scheduler state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-26000/scheduler.bin
+03/20/2026 04:06:56 - INFO - accelerate.checkpointing - Sampler state for dataloader 0 saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-26000/sampler.bin
+03/20/2026 04:06:56 - INFO - accelerate.checkpointing - Gradient scaler state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-26000/scaler.pt
+03/20/2026 04:06:56 - INFO - accelerate.checkpointing - Random states saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-26000/random_states_0.pkl
+03/20/2026 04:06:56 - INFO - __main__ - Saved state to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-26000
+Configuration saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step26000/unet_main/config.json
+Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step26000/unet_main/diffusion_pytorch_model.safetensors
+Configuration saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step26000/brushnet/config.json
+Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step26000/brushnet/diffusion_pytorch_model.safetensors
+03/20/2026 04:07:21 - INFO - __main__ - Converted weights saved to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step26000
+wandb: Adding directory to artifact (/sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step26000)... Done. 29.4s
+03/20/2026 04:07:51 - INFO - __main__ - Uploaded W&B Artifact: stage1-weights-step26000
+03/20/2026 04:07:51 - INFO - __main__ - Running validation...
+{'requires_safety_checker', 'brushnet', 'image_encoder'} was not found in config. Values will be initialized to default values.
+                                                                     {'prediction_type', 'timestep_spacing'} was not found in config. Values will be initialized to default values.
+Loaded scheduler as PNDMScheduler from `scheduler` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+Loaded safety_checker as StableDiffusionSafetyChecker from `safety_checker` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+                                                                             Loaded feature_extractor as CLIPImageProcessor from `feature_extractor` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+Loading pipeline components...: 100%|██████████| 7/7 [00:00<00:00, 15.22it/s]
+{'predict_x0', 'timestep_spacing', 'lower_order_final', 'rescale_betas_zero_snr', 'thresholding', 'solver_type', 'solver_p', 'solver_order', 'dynamic_thresholding_ratio', 'prediction_type', 'sample_max_value', 'use_karras_sigmas', 'final_sigmas_type', 'disable_corrector'} was not found in config. Values will be initialized to default values.
+03/20/2026 04:07:51 - INFO - __main__ - Found 50 validation videos in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/data_val/JPEGImages_432_240
+03/20/2026 04:11:32 - INFO - __main__ -
+=======================
+ Validation @ Step 26000 (50 videos)
+=======================
+          |   PSNR   |   SSIM
+-----------------------
+   Avg    | 23.2829  |  0.8414
+=======================
+Steps:  93%|█████████▎| 28000/30000 [19:17:26<1:14:57,  2.25s/it, loss=0.00582, lr=5e-6]03/20/2026 05:28:29 - INFO - __main__ - 3 checkpoints already exist, removing 1 checkpoints
+03/20/2026 05:28:29 - INFO - __main__ - removing checkpoints: checkpoint-22000
+03/20/2026 05:28:30 - INFO - accelerate.accelerator - Saving current state to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-28000
+03/20/2026 05:28:42 - INFO - accelerate.checkpointing - Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-28000/model.safetensors
+03/20/2026 05:28:57 - INFO - accelerate.checkpointing - Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-28000/model_1.safetensors
+03/20/2026 05:29:30 - INFO - accelerate.checkpointing - Optimizer state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-28000/optimizer.bin
+03/20/2026 05:29:30 - INFO - accelerate.checkpointing - Scheduler state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-28000/scheduler.bin
+03/20/2026 05:29:30 - INFO - accelerate.checkpointing - Sampler state for dataloader 0 saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-28000/sampler.bin
+03/20/2026 05:29:30 - INFO - accelerate.checkpointing - Gradient scaler state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-28000/scaler.pt
+03/20/2026 05:29:30 - INFO - accelerate.checkpointing - Random states saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-28000/random_states_0.pkl
+03/20/2026 05:29:30 - INFO - __main__ - Saved state to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-28000
+Configuration saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step28000/unet_main/config.json
+Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step28000/unet_main/diffusion_pytorch_model.safetensors
+Configuration saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step28000/brushnet/config.json
+Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step28000/brushnet/diffusion_pytorch_model.safetensors
+03/20/2026 05:29:55 - INFO - __main__ - Converted weights saved to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step28000
+wandb: Adding directory to artifact (/sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step28000)... Done. 28.0s
+03/20/2026 05:30:23 - INFO - __main__ - Uploaded W&B Artifact: stage1-weights-step28000
+03/20/2026 05:30:23 - INFO - __main__ - Running validation...
+{'requires_safety_checker', 'brushnet', 'image_encoder'} was not found in config. Values will be initialized to default values.
+                                                                     {'prediction_type', 'timestep_spacing'} was not found in config. Values will be initialized to default values.
+Loaded scheduler as PNDMScheduler from `scheduler` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+Loaded safety_checker as StableDiffusionSafetyChecker from `safety_checker` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+                                                                             Loaded feature_extractor as CLIPImageProcessor from `feature_extractor` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+Loading pipeline components...: 100%|██████████| 7/7 [00:00<00:00, 14.13it/s]
+{'predict_x0', 'timestep_spacing', 'lower_order_final', 'rescale_betas_zero_snr', 'thresholding', 'solver_type', 'solver_p', 'solver_order', 'dynamic_thresholding_ratio', 'prediction_type', 'sample_max_value', 'use_karras_sigmas', 'final_sigmas_type', 'disable_corrector'} was not found in config. Values will be initialized to default values.
+03/20/2026 05:30:24 - INFO - __main__ - Found 50 validation videos in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/data_val/JPEGImages_432_240
+03/20/2026 05:34:05 - INFO - __main__ -
+=======================
+ Validation @ Step 28000 (50 videos)
+=======================
+          |   PSNR   |   SSIM
+-----------------------
+   Avg    | 23.3224  |  0.8422
+=======================
+Steps: 100%|██████████| 30000/30000 [20:41:26<00:00,  2.31s/it, loss=0.0263, lr=5e-6]03/20/2026 06:52:29 - INFO - __main__ - 3 checkpoints already exist, removing 1 checkpoints
+03/20/2026 06:52:29 - INFO - __main__ - removing checkpoints: checkpoint-24000
+03/20/2026 06:52:30 - INFO - accelerate.accelerator - Saving current state to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-30000
+03/20/2026 06:52:44 - INFO - accelerate.checkpointing - Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-30000/model.safetensors
+03/20/2026 06:53:00 - INFO - accelerate.checkpointing - Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-30000/model_1.safetensors
+03/20/2026 06:53:32 - INFO - accelerate.checkpointing - Optimizer state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-30000/optimizer.bin
+03/20/2026 06:53:32 - INFO - accelerate.checkpointing - Scheduler state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-30000/scheduler.bin
+03/20/2026 06:53:32 - INFO - accelerate.checkpointing - Sampler state for dataloader 0 saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-30000/sampler.bin
+03/20/2026 06:53:32 - INFO - accelerate.checkpointing - Gradient scaler state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-30000/scaler.pt
+03/20/2026 06:53:32 - INFO - accelerate.checkpointing - Random states saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-30000/random_states_0.pkl
+03/20/2026 06:53:32 - INFO - __main__ - Saved state to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/checkpoint-30000
+Configuration saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step30000/unet_main/config.json
+Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step30000/unet_main/diffusion_pytorch_model.safetensors
+Configuration saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step30000/brushnet/config.json
+Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step30000/brushnet/diffusion_pytorch_model.safetensors
+03/20/2026 06:54:02 - INFO - __main__ - Converted weights saved to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step30000
+wandb: Adding directory to artifact (/sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights_step30000)... Done. 28.0s
+03/20/2026 06:54:31 - INFO - __main__ - Uploaded W&B Artifact: stage1-weights-step30000
+03/20/2026 06:54:31 - INFO - __main__ - Running validation...
+{'requires_safety_checker', 'brushnet', 'image_encoder'} was not found in config. Values will be initialized to default values.
+                                                                     {'prediction_type', 'timestep_spacing'} was not found in config. Values will be initialized to default values.
+Loaded scheduler as PNDMScheduler from `scheduler` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+Loaded safety_checker as StableDiffusionSafetyChecker from `safety_checker` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+                                                                             Loaded feature_extractor as CLIPImageProcessor from `feature_extractor` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+Loading pipeline components...: 100%|██████████| 7/7 [00:00<00:00, 15.18it/s]
+{'predict_x0', 'timestep_spacing', 'lower_order_final', 'rescale_betas_zero_snr', 'thresholding', 'solver_type', 'solver_p', 'solver_order', 'dynamic_thresholding_ratio', 'prediction_type', 'sample_max_value', 'use_karras_sigmas', 'final_sigmas_type', 'disable_corrector'} was not found in config. Values will be initialized to default values.
+03/20/2026 06:54:31 - INFO - __main__ - Found 50 validation videos in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/data_val/JPEGImages_432_240
+03/20/2026 06:58:12 - INFO - __main__ -
+=======================
+ Validation @ Step 30000 (50 videos)
+=======================
+          |   PSNR   |   SSIM
+-----------------------
+   Avg    | 23.3257  |  0.8423
+=======================
+Steps: 100%|██████████| 30000/30000 [20:47:09<00:00,  2.31s/it, loss=0.00377, lr=5e-6]Configuration saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights/unet_main/config.json
+Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights/unet_main/diffusion_pytorch_model.safetensors
+Configuration saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights/brushnet/config.json
+Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights/brushnet/diffusion_pytorch_model.safetensors
+03/20/2026 06:58:41 - INFO - __main__ - Stage 1 converted weights saved to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage1/converted_weights

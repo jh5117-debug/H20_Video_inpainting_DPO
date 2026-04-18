@@ -1,0 +1,291 @@
+2026-03-30 05:38:38 03/30/2026 07:38:38 - INFO - __main__ - WandB tracker initialized successfully (early init).
+2026-03-30 05:38:38 You are using a model of type clip_text_model to instantiate a model of type . This is not supported for all configurations of models and can yield errors.
+2026-03-30 05:38:38 {'clip_sample_range', 'dynamic_thresholding_ratio', 'timestep_spacing', 'sample_max_value', 'prediction_type', 'thresholding', 'variance_type', 'rescale_betas_zero_snr'} was not found in config. Values will be initialized to default values.
+2026-03-30 05:38:38 {'scaling_factor', 'use_post_quant_conv', 'latents_mean', 'force_upcast', 'use_quant_conv', 'latents_std', 'shift_factor'} was not found in config. Values will be initialized to default values.
+2026-03-30 05:38:38 03/30/2026 07:38:38 - INFO - __main__ - Ref unet config _class_name: UNetMotionModel, is_motion_model=True
+2026-03-30 05:38:38 03/30/2026 07:38:38 - INFO - __main__ - Loading policy UNet via UNetMotionModel from /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage2/converted_weights_step34000 (extracting 2D weights)
+2026-03-30 05:38:38 The config attributes {'addition_embed_type': None, 'addition_embed_type_num_heads': 64, 'addition_time_embed_dim': None, 'attention_head_dim': 8, 'center_input_sample': False, 'class_embed_type': None, 'class_embeddings_concat': False, 'conv_in_kernel': 3, 'conv_out_kernel': 3, 'cross_attention_norm': None, 'dual_cross_attention': False, 'flip_sin_to_cos': True, 'freq_shift': 0, 'mid_block_only_cross_attention': None, 'num_class_embeds': None, 'only_cross_attention': False, 'projection_class_embeddings_input_dim': None, 'resnet_out_scale_factor': 1.0, 'resnet_skip_time_act': False, 'resnet_time_scale_shift': 'default', 'time_cond_proj_dim': None, 'time_embedding_act_fn': None, 'time_embedding_dim': None, 'time_embedding_type': 'positional', 'timestep_post_act': None, 'transformer_layers_per_block': 1, 'upcast_attention': None} were passed to UNetMotionModel, but are not expected and will be ignored. Please verify your config.json configuration file.
+2026-03-30 05:38:38 {'num_class_embeds', 'projection_class_embeddings_input_dim', 'attention_type', 'encoder_hid_dim_type', 'reverse_transformer_layers_per_block', 'upcast_attention', 'cross_attention_norm', 'dual_cross_attention', 'timestep_post_act', 'resnet_skip_time_act', 'addition_time_embed_dim', 'use_linear_projection', 'time_embedding_dim', 'time_cond_proj_dim', 'class_embeddings_concat', 'encoder_hid_dim', 'only_cross_attention', 'addition_embed_type_num_heads', 'time_embedding_act_fn', 'mid_block_type', 'resnet_out_scale_factor', 'class_embed_type', 'conv_out_kernel', 'transformer_layers_per_block', 'time_embedding_type', 'dropout', 'addition_embed_type', 'num_attention_heads', 'conv_in_kernel', 'resnet_time_scale_shift', 'mid_block_only_cross_attention'} was not found in config. Values will be initialized to default values.
+2026-03-30 05:38:50 03/30/2026 07:38:50 - INFO - __main__ - Successfully extracted policy 2D UNet weights from UNetMotionModel
+2026-03-30 05:38:50 03/30/2026 07:38:50 - INFO - __main__ - Loading policy BrushNet from /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage2/converted_weights_step34000
+2026-03-30 05:38:51 03/30/2026 07:38:51 - INFO - __main__ - Loading ref UNet via UNetMotionModel from /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage2/converted_weights_step34000 (extracting 2D weights)
+2026-03-30 05:38:51 The config attributes {'addition_embed_type': None, 'addition_embed_type_num_heads': 64, 'addition_time_embed_dim': None, 'attention_head_dim': 8, 'center_input_sample': False, 'class_embed_type': None, 'class_embeddings_concat': False, 'conv_in_kernel': 3, 'conv_out_kernel': 3, 'cross_attention_norm': None, 'dual_cross_attention': False, 'flip_sin_to_cos': True, 'freq_shift': 0, 'mid_block_only_cross_attention': None, 'num_class_embeds': None, 'only_cross_attention': False, 'projection_class_embeddings_input_dim': None, 'resnet_out_scale_factor': 1.0, 'resnet_skip_time_act': False, 'resnet_time_scale_shift': 'default', 'time_cond_proj_dim': None, 'time_embedding_act_fn': None, 'time_embedding_dim': None, 'time_embedding_type': 'positional', 'timestep_post_act': None, 'transformer_layers_per_block': 1, 'upcast_attention': None} were passed to UNetMotionModel, but are not expected and will be ignored. Please verify your config.json configuration file.
+2026-03-30 05:38:51 {'num_class_embeds', 'projection_class_embeddings_input_dim', 'attention_type', 'encoder_hid_dim_type', 'reverse_transformer_layers_per_block', 'upcast_attention', 'cross_attention_norm', 'dual_cross_attention', 'timestep_post_act', 'resnet_skip_time_act', 'addition_time_embed_dim', 'use_linear_projection', 'time_embedding_dim', 'time_cond_proj_dim', 'class_embeddings_concat', 'encoder_hid_dim', 'only_cross_attention', 'addition_embed_type_num_heads', 'time_embedding_act_fn', 'mid_block_type', 'resnet_out_scale_factor', 'class_embed_type', 'conv_out_kernel', 'transformer_layers_per_block', 'time_embedding_type', 'dropout', 'addition_embed_type', 'num_attention_heads', 'conv_in_kernel', 'resnet_time_scale_shift', 'mid_block_only_cross_attention'} was not found in config. Values will be initialized to default values.
+2026-03-30 05:38:53 03/30/2026 07:38:53 - INFO - __main__ - Successfully extracted ref 2D UNet weights from UNetMotionModel
+2026-03-30 05:38:53 03/30/2026 07:38:53 - INFO - __main__ - Loading ref BrushNet from /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/finetune-stage2/converted_weights_step34000
+2026-03-30 05:38:53 DPODataset integrity: waiting for another process to finish dataset scan ...
+2026-03-30 06:03:01 DPODataset integrity: videos_scanned=2024, usable_videos=2007, skipped_videos=17, images_scanned=282624, trainable_images=280136, bad_images=1193, all_videos_clean=False
+2026-03-30 06:03:01 DPODataset integrity: skipped bad videos (first 10) = ['davis_dogs-scale', 'ytbv_045f00aed2', 'ytbv_04f21da964', 'ytbv_0503bf89c9', 'ytbv_38fe9b3ed1', 'ytbv_3b6e983b5b', 'ytbv_45d9fc1357', 'ytbv_6d12e30c48', 'ytbv_6f96e91d81', 'ytbv_72cae058a5']
+2026-03-30 06:03:01 DPODataset integrity report saved to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/data/DPO_Finetune_data/.dpo_dataset_integrity_report.json
+2026-03-30 06:03:01 DPODataset: 5076 entries from /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/data/DPO_Finetune_data (davis=1180, ytbv=3896, neg_1=2538, neg_2=2538)
+2026-03-30 06:03:28 03/30/2026 08:03:28 - INFO - __main__ - ***** Running DPO Stage 1 Training *****
+2026-03-30 06:03:28 03/30/2026 08:03:28 - INFO - __main__ -   Num examples = 5076
+2026-03-30 06:03:28 03/30/2026 08:03:28 - INFO - __main__ -   Num batches each epoch (per GPU) = 635
+2026-03-30 06:03:28 03/30/2026 08:03:28 - INFO - __main__ -   Num Epochs = 32
+2026-03-30 06:03:28 03/30/2026 08:03:28 - INFO - __main__ -   Batch size per device = 1
+2026-03-30 06:03:28 03/30/2026 08:03:28 - INFO - __main__ -   Total train batch size = 8
+2026-03-30 06:03:28 03/30/2026 08:03:28 - INFO - __main__ -   Gradient Accumulation steps = 1
+2026-03-30 06:03:28 03/30/2026 08:03:28 - INFO - __main__ -   Total optimization steps = 20000
+2026-03-30 06:03:28 03/30/2026 08:03:28 - INFO - __main__ -   Beta DPO = 2500.0
+2026-03-30 06:03:28 03/30/2026 08:03:28 - INFO - __main__ - ====== Model Parameters ======
+2026-03-30 06:03:28 03/30/2026 08:03:28 - INFO - __main__ -   unet_main (policy): total=  859.5M  trainable=  859.5M  frozen=    0.0M  [🔥 trainable]
+2026-03-30 06:03:28 03/30/2026 08:03:28 - INFO - __main__ -   brushnet (policy): total=  886.1M  trainable=  886.1M  frozen=    0.0M  [🔥 trainable]
+2026-03-30 06:03:28 03/30/2026 08:03:28 - INFO - __main__ -   unet_ref (frozen): total=  859.5M  trainable=    0.0M  frozen=  859.5M  [❄️ frozen]
+2026-03-30 06:03:28 03/30/2026 08:03:28 - INFO - __main__ -   brushnet_ref (frozen): total=  886.1M  trainable=    0.0M  frozen=  886.1M  [❄️ frozen]
+2026-03-30 06:03:28 03/30/2026 08:03:28 - INFO - __main__ -   vae            : total=   83.7M  trainable=    0.0M  frozen=   83.7M  [❄️ frozen]
+2026-03-30 06:03:28 03/30/2026 08:03:28 - INFO - __main__ -   text_encoder   : total=  123.1M  trainable=    0.0M  frozen=  123.1M  [❄️ frozen]
+2026-03-30 06:03:28 03/30/2026 08:03:28 - INFO - __main__ - ==============================
+2026-03-30 06:03:28 Checkpoint 'latest' does not exist. Starting fresh.
+2026-03-30 06:03:28 Steps:   0%|          | 1/20000 [00:19<107:33:27, 19.36s/it]03/30/2026 08:03:48 - INFO - __main__ -
+2026-03-30 06:03:48   ════════════════════════════════════════════════════════════════════════
+2026-03-30 06:03:48   ║  DPO Diagnostics @ Step      1                                       ║
+2026-03-30 06:03:48   ════════════════════════════════════════════════════════════════════════
+2026-03-30 06:03:48   ║  Metric                       Value         Ideal      Status  ║
+2026-03-30 06:03:48   ║  ────────────────────────────────────────────────────────────────────  ║
+2026-03-30 06:03:48   ║  L_dpo                     0.698966  ↓ decreasing          ⚠️  ║
+2026-03-30 06:03:48   ║  Implicit Acc              0.250000       0.5~0.9          ⚠️  ║
+2026-03-30 06:03:48   ║  Win Gap                   0.000001     < 0 (neg)          ⚠️  ║
+2026-03-30 06:03:48   ║  Lose Gap                 -0.000007     > 0 (pos)          ⚠️  ║
+2026-03-30 06:03:48   ║  Reward Margin            -0.497616     < 0 (neg)           ✅  ║
+2026-03-30 06:03:48   ║  Sigma Term                0.497312       0.5~0.9          ⚠️  ║
+2026-03-30 06:03:48   ║  KL Divergence            -0.000002         small           —  ║
+2026-03-30 06:03:48   ║  MSE (win)                 0.089396             ↓           —  ║
+2026-03-30 06:03:48   ║  MSE (lose)                0.587003   ↑ or stable           —  ║
+2026-03-30 06:03:48   ║  Ref MSE (win)             0.089394      baseline           —  ║
+2026-03-30 06:03:48   ║  Ref MSE (lose)            0.587010      baseline           —  ║
+2026-03-30 06:03:48   ║  DGR (grad norm)                nan   > 0 (alive)          ⚠️  ║
+2026-03-30 06:03:48   ════════════════════════════════════════════════════════════════════════
+2026-03-30 06:03:48 
+2026-03-30 06:03:48 Steps:   2%|▏         | 300/20000 [18:29<22:54:43,  4.19s/it, dpo_loss=0.0000, implicit_acc=1.0000, lose_gap=0.0404, mse_l=0.0717, mse_w=0.0239, win_gap=0.0190]03/30/2026 08:21:58 - INFO - __main__ -
+2026-03-30 06:21:58   ════════════════════════════════════════════════════════════════════════
+2026-03-30 06:21:58   ║  DPO Diagnostics @ Step    300                                       ║
+2026-03-30 06:21:58   ════════════════════════════════════════════════════════════════════════
+2026-03-30 06:21:58   ║  Metric                       Value         Ideal      Status  ║
+2026-03-30 06:21:58   ║  ────────────────────────────────────────────────────────────────────  ║
+2026-03-30 06:21:58   ║  L_dpo                     0.000000  ↓ decreasing           ✅  ║
+2026-03-30 06:21:58   ║  Implicit Acc              1.000000       0.5~0.9          ⚠️  ║
+2026-03-30 06:21:58   ║  Win Gap                   0.028869     < 0 (neg)          ⚠️  ║
+2026-03-30 06:21:58   ║  Lose Gap                  0.062971     > 0 (pos)           ✅  ║
+2026-03-30 06:21:58   ║  Reward Margin            -0.153228     < 0 (neg)           ✅  ║
+2026-03-30 06:21:58   ║  Sigma Term                1.000000       0.5~0.9          ⚠️  ║
+2026-03-30 06:21:58   ║  KL Divergence             0.022960         small           —  ║
+2026-03-30 06:21:58   ║  MSE (win)                 0.100356             ↓           —  ║
+2026-03-30 06:21:58   ║  MSE (lose)                0.287686   ↑ or stable           —  ║
+2026-03-30 06:21:58   ║  Ref MSE (win)             0.071487      baseline           —  ║
+2026-03-30 06:21:58   ║  Ref MSE (lose)            0.224715      baseline           —  ║
+2026-03-30 06:21:58   ║  DGR (grad norm)           0.000000   > 0 (alive)          ⚠️  ║
+2026-03-30 06:21:58   ════════════════════════════════════════════════════════════════════════
+2026-03-30 06:21:58 
+2026-03-30 06:21:58 Steps:   3%|▎         | 600/20000 [36:40<19:44:32,  3.66s/it, dpo_loss=0.0000, implicit_acc=1.0000, lose_gap=0.0900, mse_l=0.4469, mse_w=0.0726, win_gap=0.0220]03/30/2026 08:40:08 - INFO - __main__ -
+2026-03-30 06:40:08   ════════════════════════════════════════════════════════════════════════
+2026-03-30 06:40:08   ║  DPO Diagnostics @ Step    600                                       ║
+2026-03-30 06:40:08   ════════════════════════════════════════════════════════════════════════
+2026-03-30 06:40:08   ║  Metric                       Value         Ideal      Status  ║
+2026-03-30 06:40:08   ║  ────────────────────────────────────────────────────────────────────  ║
+2026-03-30 06:40:08   ║  L_dpo                     0.000000  ↓ decreasing           ✅  ║
+2026-03-30 06:40:08   ║  Implicit Acc              1.000000       0.5~0.9          ⚠️  ║
+2026-03-30 06:40:08   ║  Win Gap                   0.020354     < 0 (neg)          ⚠️  ║
+2026-03-30 06:40:08   ║  Lose Gap                  0.062215     > 0 (pos)           ✅  ║
+2026-03-30 06:40:08   ║  Reward Margin            -0.124499     < 0 (neg)           ✅  ║
+2026-03-30 06:40:08   ║  Sigma Term                1.000000       0.5~0.9          ⚠️  ║
+2026-03-30 06:40:08   ║  KL Divergence             0.020642         small           —  ║
+2026-03-30 06:40:08   ║  MSE (win)                 0.045846             ↓           —  ║
+2026-03-30 06:40:08   ║  MSE (lose)                0.212206   ↑ or stable           —  ║
+2026-03-30 06:40:08   ║  Ref MSE (win)             0.025492      baseline           —  ║
+2026-03-30 06:40:08   ║  Ref MSE (lose)            0.149992      baseline           —  ║
+2026-03-30 06:40:08   ║  DGR (grad norm)           0.000000   > 0 (alive)          ⚠️  ║
+2026-03-30 06:40:08   ════════════════════════════════════════════════════════════════════════
+2026-03-30 06:40:08 
+2026-03-30 06:40:08 Steps:   4%|▍         | 900/20000 [54:53<18:17:47,  3.45s/it, dpo_loss=0.0002, implicit_acc=1.0000, lose_gap=0.0657, mse_l=0.0665, mse_w=0.0579, win_gap=0.0576]03/30/2026 08:58:22 - INFO - __main__ -
+2026-03-30 06:58:22   ════════════════════════════════════════════════════════════════════════
+2026-03-30 06:58:22   ║  DPO Diagnostics @ Step    900                                       ║
+2026-03-30 06:58:22   ════════════════════════════════════════════════════════════════════════
+2026-03-30 06:58:22   ║  Metric                       Value         Ideal      Status  ║
+2026-03-30 06:58:22   ║  ────────────────────────────────────────────────────────────────────  ║
+2026-03-30 06:58:22   ║  L_dpo                     0.000000  ↓ decreasing           ✅  ║
+2026-03-30 06:58:22   ║  Implicit Acc              1.000000       0.5~0.9          ⚠️  ║
+2026-03-30 06:58:22   ║  Win Gap                   0.023735     < 0 (neg)          ⚠️  ║
+2026-03-30 06:58:22   ║  Lose Gap                  0.081170     > 0 (pos)           ✅  ║
+2026-03-30 06:58:22   ║  Reward Margin            -0.138066     < 0 (neg)           ✅  ║
+2026-03-30 06:58:22   ║  Sigma Term                1.000000       0.5~0.9          ⚠️  ║
+2026-03-30 06:58:22   ║  KL Divergence             0.026226         small           —  ║
+2026-03-30 06:58:22   ║  MSE (win)                 0.059633             ↓           —  ║
+2026-03-30 06:58:22   ║  MSE (lose)                0.255133   ↑ or stable           —  ║
+2026-03-30 06:58:22   ║  Ref MSE (win)             0.035897      baseline           —  ║
+2026-03-30 06:58:22   ║  Ref MSE (lose)            0.173963      baseline           —  ║
+2026-03-30 06:58:22   ║  DGR (grad norm)           0.000001   > 0 (alive)           ✅  ║
+2026-03-30 06:58:22   ════════════════════════════════════════════════════════════════════════
+2026-03-30 06:58:22 
+2026-03-30 06:58:22 Steps:   6%|▌         | 1200/20000 [1:13:14<18:41:40,  3.58s/it, dpo_loss=0.0000, implicit_acc=1.0000, lose_gap=0.0484, mse_l=0.0964, mse_w=0.0431, win_gap=0.0252]03/30/2026 09:16:43 - INFO - __main__ -
+2026-03-30 07:16:43   ════════════════════════════════════════════════════════════════════════
+2026-03-30 07:16:43   ║  DPO Diagnostics @ Step   1200                                       ║
+2026-03-30 07:16:43   ════════════════════════════════════════════════════════════════════════
+2026-03-30 07:16:43   ║  Metric                       Value         Ideal      Status  ║
+2026-03-30 07:16:43   ║  ────────────────────────────────────────────────────────────────────  ║
+2026-03-30 07:16:43   ║  L_dpo                     0.000000  ↓ decreasing           ✅  ║
+2026-03-30 07:16:43   ║  Implicit Acc              1.000000       0.5~0.9          ⚠️  ║
+2026-03-30 07:16:43   ║  Win Gap                   0.050278     < 0 (neg)          ⚠️  ║
+2026-03-30 07:16:43   ║  Lose Gap                  0.065276     > 0 (pos)           ✅  ║
+2026-03-30 07:16:43   ║  Reward Margin            -0.001202     < 0 (neg)           ✅  ║
+2026-03-30 07:16:43   ║  Sigma Term                1.000000       0.5~0.9          ⚠️  ║
+2026-03-30 07:16:43   ║  KL Divergence             0.028889         small           —  ║
+2026-03-30 07:16:43   ║  MSE (win)                 0.050984             ↓           —  ║
+2026-03-30 07:16:43   ║  MSE (lose)                0.067184   ↑ or stable           —  ║
+2026-03-30 07:16:43   ║  Ref MSE (win)             0.000706      baseline           —  ║
+2026-03-30 07:16:43   ║  Ref MSE (lose)            0.001908      baseline           —  ║
+2026-03-30 07:16:43   ║  DGR (grad norm)           0.079820   > 0 (alive)           ✅  ║
+2026-03-30 07:16:43   ════════════════════════════════════════════════════════════════════════
+2026-03-30 07:16:43 
+2026-03-30 07:16:43 Steps:   8%|▊         | 1500/20000 [1:31:36<19:26:19,  3.78s/it, dpo_loss=0.0000, implicit_acc=1.0000, lose_gap=0.0698, mse_l=0.0723, mse_w=0.0569, win_gap=0.0562]03/30/2026 09:35:05 - INFO - __main__ -
+2026-03-30 07:35:05   ════════════════════════════════════════════════════════════════════════
+2026-03-30 07:35:05   ║  DPO Diagnostics @ Step   1500                                       ║
+2026-03-30 07:35:05   ════════════════════════════════════════════════════════════════════════
+2026-03-30 07:35:05   ║  Metric                       Value         Ideal      Status  ║
+2026-03-30 07:35:05   ║  ────────────────────────────────────────────────────────────────────  ║
+2026-03-30 07:35:05   ║  L_dpo                     0.000000  ↓ decreasing           ✅  ║
+2026-03-30 07:35:05   ║  Implicit Acc              1.000000       0.5~0.9          ⚠️  ║
+2026-03-30 07:35:05   ║  Win Gap                   0.039396     < 0 (neg)          ⚠️  ║
+2026-03-30 07:35:05   ║  Lose Gap                  0.088134     > 0 (pos)           ✅  ║
+2026-03-30 07:35:05   ║  Reward Margin            -0.152520     < 0 (neg)           ✅  ║
+2026-03-30 07:35:05   ║  Sigma Term                1.000000       0.5~0.9          ⚠️  ║
+2026-03-30 07:35:05   ║  KL Divergence             0.031883         small           —  ║
+2026-03-30 07:35:05   ║  MSE (win)                 0.099653             ↓           —  ║
+2026-03-30 07:35:05   ║  MSE (lose)                0.300911   ↑ or stable           —  ║
+2026-03-30 07:35:05   ║  Ref MSE (win)             0.060257      baseline           —  ║
+2026-03-30 07:35:05   ║  Ref MSE (lose)            0.212777      baseline           —  ║
+2026-03-30 07:35:05   ║  DGR (grad norm)           0.000000   > 0 (alive)          ⚠️  ║
+2026-03-30 07:35:05   ════════════════════════════════════════════════════════════════════════
+2026-03-30 07:35:05 
+2026-03-30 07:35:05 Steps:   9%|▉         | 1800/20000 [1:50:03<20:10:37,  3.99s/it, dpo_loss=0.0000, implicit_acc=1.0000, lose_gap=0.0750, mse_l=0.1052, mse_w=0.0567, win_gap=0.0449]03/30/2026 09:53:32 - INFO - __main__ -
+2026-03-30 07:53:32   ════════════════════════════════════════════════════════════════════════
+2026-03-30 07:53:32   ║  DPO Diagnostics @ Step   1800                                       ║
+2026-03-30 07:53:32   ════════════════════════════════════════════════════════════════════════
+2026-03-30 07:53:32   ║  Metric                       Value         Ideal      Status  ║
+2026-03-30 07:53:32   ║  ────────────────────────────────────────────────────────────────────  ║
+2026-03-30 07:53:32   ║  L_dpo                     0.000000  ↓ decreasing           ✅  ║
+2026-03-30 07:53:32   ║  Implicit Acc              1.000000       0.5~0.9          ⚠️  ║
+2026-03-30 07:53:32   ║  Win Gap                   0.036570     < 0 (neg)          ⚠️  ║
+2026-03-30 07:53:32   ║  Lose Gap                  0.057875     > 0 (pos)           ✅  ║
+2026-03-30 07:53:32   ║  Reward Margin            -0.006949     < 0 (neg)           ✅  ║
+2026-03-30 07:53:32   ║  Sigma Term                1.000000       0.5~0.9          ⚠️  ║
+2026-03-30 07:53:32   ║  KL Divergence             0.023611         small           —  ║
+2026-03-30 07:53:32   ║  MSE (win)                 0.038266             ↓           —  ║
+2026-03-30 07:53:32   ║  MSE (lose)                0.066520   ↑ or stable           —  ║
+2026-03-30 07:53:32   ║  Ref MSE (win)             0.001696      baseline           —  ║
+2026-03-30 07:53:32   ║  Ref MSE (lose)            0.008645      baseline           —  ║
+2026-03-30 07:53:32   ║  DGR (grad norm)           0.000101   > 0 (alive)           ✅  ║
+2026-03-30 07:53:32   ════════════════════════════════════════════════════════════════════════
+2026-03-30 07:53:32 
+2026-03-30 07:53:32 Steps:  10%|█         | 2000/20000 [2:02:30<21:14:57,  4.25s/it, dpo_loss=0.0000, implicit_acc=1.0000, lose_gap=0.0769, mse_l=0.1095, mse_w=0.0578, win_gap=0.0464]03/30/2026 10:05:59 - INFO - accelerate.accelerator - Saving current state to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/dpo-finetune-stage1/checkpoint-2000
+2026-03-30 08:06:15 03/30/2026 10:06:15 - INFO - accelerate.checkpointing - Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/dpo-finetune-stage1/checkpoint-2000/model.safetensors
+2026-03-30 08:06:31 03/30/2026 10:06:31 - INFO - accelerate.checkpointing - Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/dpo-finetune-stage1/checkpoint-2000/model_1.safetensors
+2026-03-30 08:07:03 03/30/2026 10:07:03 - INFO - accelerate.checkpointing - Optimizer state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/dpo-finetune-stage1/checkpoint-2000/optimizer.bin
+2026-03-30 08:07:03 03/30/2026 10:07:03 - INFO - accelerate.checkpointing - Scheduler state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/dpo-finetune-stage1/checkpoint-2000/scheduler.bin
+2026-03-30 08:07:03 03/30/2026 10:07:03 - INFO - accelerate.checkpointing - Sampler state for dataloader 0 saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/dpo-finetune-stage1/checkpoint-2000/sampler.bin
+2026-03-30 08:07:03 03/30/2026 10:07:03 - INFO - accelerate.checkpointing - Gradient scaler state saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/dpo-finetune-stage1/checkpoint-2000/scaler.pt
+2026-03-30 08:07:03 03/30/2026 10:07:03 - INFO - accelerate.checkpointing - Random states saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/dpo-finetune-stage1/checkpoint-2000/random_states_0.pkl
+2026-03-30 08:07:03 03/30/2026 10:07:03 - INFO - __main__ - Saved state to /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/dpo-finetune-stage1/checkpoint-2000
+2026-03-30 08:07:03 03/30/2026 10:07:03 - INFO - __main__ - Running validation...
+2026-03-30 08:07:03 {'brushnet', 'image_encoder', 'requires_safety_checker'} was not found in config. Values will be initialized to default values.
+2026-03-30 08:07:03                                                                      Loaded feature_extractor as CLIPImageProcessor from `feature_extractor` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+2026-03-30 08:07:03 {'timestep_spacing', 'prediction_type'} was not found in config. Values will be initialized to default values.
+2026-03-30 08:07:03 Loaded scheduler as PNDMScheduler from `scheduler` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+2026-03-30 08:07:08 Loaded safety_checker as StableDiffusionSafetyChecker from `safety_checker` subfolder of /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/weights/stable-diffusion-v1-5.
+2026-03-30 08:07:08 Loading pipeline components...: 100%|██████████| 7/7 [00:04<00:00,  1.56it/s]
+2026-03-30 08:07:08 {'lower_order_final', 'dynamic_thresholding_ratio', 'timestep_spacing', 'solver_type', 'sample_max_value', 'solver_order', 'predict_x0', 'disable_corrector', 'thresholding', 'final_sigmas_type', 'solver_p', 'prediction_type', 'use_karras_sigmas', 'rescale_betas_zero_snr'} was not found in config. Values will be initialized to default values.
+2026-03-30 08:07:08 03/30/2026 10:07:08 - INFO - __main__ - Found 50 validation videos in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/data_val/JPEGImages_432_240
+2026-03-30 08:10:55 03/30/2026 10:10:55 - INFO - __main__ -
+2026-03-30 08:10:55 =======================
+2026-03-30 08:10:55  Validation @ Step 2000 (50 videos)
+2026-03-30 08:10:55 =======================
+2026-03-30 08:10:55           |   PSNR   |   SSIM
+2026-03-30 08:10:55 -----------------------
+2026-03-30 08:10:55    Avg    | 19.0605  |  0.7679
+2026-03-30 08:10:55 =======================
+2026-03-30 08:10:56 Configuration saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/dpo-finetune-stage1/best_weights/unet_main/config.json
+2026-03-30 08:11:10 Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/dpo-finetune-stage1/best_weights/unet_main/diffusion_pytorch_model.safetensors
+2026-03-30 08:11:10 Configuration saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/dpo-finetune-stage1/best_weights/brushnet/config.json
+2026-03-30 08:11:24 Model weights saved in /sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/dpo-finetune-stage1/best_weights/brushnet/diffusion_pytorch_model.safetensors
+2026-03-30 08:11:24 03/30/2026 10:11:24 - INFO - __main__ - New best weights saved (composite=0.5746)
+2026-03-30 08:11:24 wandb: Adding directory to artifact (/sc-projects/sc-proj-cc09-repair/hongyou/dev/Reg_DPO_Inpainting/dpo-finetune-stage1/best_weights)... Done. 32.5s
+2026-03-30 08:11:59 Steps:  10%|█         | 2100/20000 [2:14:55<17:44:10,  3.57s/it, dpo_loss=0.0000, implicit_acc=1.0000, lose_gap=0.0830, mse_l=0.2629, mse_w=0.0816, win_gap=0.0326]03/30/2026 10:18:24 - INFO - __main__ -
+2026-03-30 08:18:24   ════════════════════════════════════════════════════════════════════════
+2026-03-30 08:18:24   ║  DPO Diagnostics @ Step   2100                                       ║
+2026-03-30 08:18:24   ════════════════════════════════════════════════════════════════════════
+2026-03-30 08:18:24   ║  Metric                       Value         Ideal      Status  ║
+2026-03-30 08:18:24   ║  ────────────────────────────────────────────────────────────────────  ║
+2026-03-30 08:18:24   ║  L_dpo                     0.000000  ↓ decreasing           ✅  ║
+2026-03-30 08:18:24   ║  Implicit Acc              1.000000       0.5~0.9          ⚠️  ║
+2026-03-30 08:18:24   ║  Win Gap                   0.038448     < 0 (neg)          ⚠️  ║
+2026-03-30 08:18:24   ║  Lose Gap                  0.069769     > 0 (pos)           ✅  ║
+2026-03-30 08:18:24   ║  Reward Margin            -0.033668     < 0 (neg)           ✅  ║
+2026-03-30 08:18:24   ║  Sigma Term                1.000000       0.5~0.9          ⚠️  ║
+2026-03-30 08:18:24   ║  KL Divergence             0.027054         small           —  ║
+2026-03-30 08:18:24   ║  MSE (win)                 0.063428             ↓           —  ║
+2026-03-30 08:18:24   ║  MSE (lose)                0.128417   ↑ or stable           —  ║
+2026-03-30 08:18:24   ║  Ref MSE (win)             0.024980      baseline           —  ║
+2026-03-30 08:18:24   ║  Ref MSE (lose)            0.058647      baseline           —  ║
+2026-03-30 08:18:24   ║  DGR (grad norm)           0.000000   > 0 (alive)          ⚠️  ║
+2026-03-30 08:18:24   ════════════════════════════════════════════════════════════════════════
+2026-03-30 08:18:24 
+2026-03-30 08:18:24 Steps:  12%|█▏        | 2400/20000 [2:33:40<18:05:56,  3.70s/it, dpo_loss=0.0000, implicit_acc=1.0000, lose_gap=0.0841, mse_l=0.1814, mse_w=0.0445, win_gap=0.0282]03/30/2026 10:37:09 - INFO - __main__ -
+2026-03-30 08:37:09   ════════════════════════════════════════════════════════════════════════
+2026-03-30 08:37:09   ║  DPO Diagnostics @ Step   2400                                       ║
+2026-03-30 08:37:09   ════════════════════════════════════════════════════════════════════════
+2026-03-30 08:37:09   ║  Metric                       Value         Ideal      Status  ║
+2026-03-30 08:37:09   ║  ────────────────────────────────────────────────────────────────────  ║
+2026-03-30 08:37:09   ║  L_dpo                     0.000000  ↓ decreasing           ✅  ║
+2026-03-30 08:37:09   ║  Implicit Acc              1.000000       0.5~0.9          ⚠️  ║
+2026-03-30 08:37:09   ║  Win Gap                   0.034100     < 0 (neg)          ⚠️  ║
+2026-03-30 08:37:09   ║  Lose Gap                  0.057849     > 0 (pos)           ✅  ║
+2026-03-30 08:37:09   ║  Reward Margin            -0.032851     < 0 (neg)           ✅  ║
+2026-03-30 08:37:09   ║  Sigma Term                1.000000       0.5~0.9          ⚠️  ║
+2026-03-30 08:37:09   ║  KL Divergence             0.022987         small           —  ║
+2026-03-30 08:37:09   ║  MSE (win)                 0.063609             ↓           —  ║
+2026-03-30 08:37:09   ║  MSE (lose)                0.120209   ↑ or stable           —  ║
+2026-03-30 08:37:09   ║  Ref MSE (win)             0.029510      baseline           —  ║
+2026-03-30 08:37:09   ║  Ref MSE (lose)            0.062361      baseline           —  ║
+2026-03-30 08:37:09   ║  DGR (grad norm)           0.000000   > 0 (alive)          ⚠️  ║
+2026-03-30 08:37:09   ════════════════════════════════════════════════════════════════════════
+2026-03-30 08:37:09 
+2026-03-30 08:37:09 Steps:  14%|█▎        | 2700/20000 [2:52:16<16:56:58,  3.53s/it, dpo_loss=0.0000, implicit_acc=1.0000, lose_gap=0.1564, mse_l=1.1505, mse_w=0.1192, win_gap=0.0212]03/30/2026 10:55:45 - INFO - __main__ -
+2026-03-30 08:55:45   ════════════════════════════════════════════════════════════════════════
+2026-03-30 08:55:45   ║  DPO Diagnostics @ Step   2700                                       ║
+2026-03-30 08:55:45   ════════════════════════════════════════════════════════════════════════
+2026-03-30 08:55:45   ║  Metric                       Value         Ideal      Status  ║
+2026-03-30 08:55:45   ║  ────────────────────────────────────────────────────────────────────  ║
+2026-03-30 08:55:45   ║  L_dpo                     0.000000  ↓ decreasing           ✅  ║
+2026-03-30 08:55:45   ║  Implicit Acc              1.000000       0.5~0.9          ⚠️  ║
+2026-03-30 08:55:45   ║  Win Gap                   0.034310     < 0 (neg)          ⚠️  ║
+2026-03-30 08:55:45   ║  Lose Gap                  0.086989     > 0 (pos)           ✅  ║
+2026-03-30 08:55:45   ║  Reward Margin            -0.089080     < 0 (neg)           ✅  ║
+2026-03-30 08:55:45   ║  Sigma Term                1.000000       0.5~0.9          ⚠️  ║
+2026-03-30 08:55:45   ║  KL Divergence             0.030325         small           —  ║
+2026-03-30 08:55:45   ║  MSE (win)                 0.059042             ↓           —  ║
+2026-03-30 08:55:45   ║  MSE (lose)                0.200801   ↑ or stable           —  ║
+2026-03-30 08:55:45   ║  Ref MSE (win)             0.024732      baseline           —  ║
+2026-03-30 08:55:45   ║  Ref MSE (lose)            0.113812      baseline           —  ║
+2026-03-30 08:55:45   ║  DGR (grad norm)           0.000000   > 0 (alive)          ⚠️  ║
+2026-03-30 08:55:45   ════════════════════════════════════════════════════════════════════════
+2026-03-30 08:55:45 
+2026-03-30 08:55:45 Steps:  14%|█▍        | 2848/20000 [3:01:23<16:29:52,  3.46s/it, dpo_loss=0.0000, implicit_acc=1.0000, lose_gap=0.0586, mse_l=0.1276, mse_w=0.0441, win_gap=0.0291]
+2026-03-30 09:14:43   ════════════════════════════════════════════════════════════════════════
+2026-03-30 09:14:43   ║  DPO Diagnostics @ Step   3000                                       ║
+2026-03-30 09:14:43   ════════════════════════════════════════════════════════════════════════
+2026-03-30 09:14:43   ║  Metric                       Value         Ideal      Status  ║
+2026-03-30 09:14:43   ║  ────────────────────────────────────────────────────────────────────  ║
+2026-03-30 09:14:43   ║  L_dpo                     0.000000  ↓ decreasing           ✅  ║
+2026-03-30 09:14:43   ║  Implicit Acc              1.000000       0.5~0.9          ⚠️  ║
+2026-03-30 09:14:43   ║  Win Gap                   0.099278     < 0 (neg)          ⚠️  ║
+2026-03-30 09:14:43   ║  Lose Gap                  0.114143     > 0 (pos)           ✅  ║
+2026-03-30 09:14:43   ║  Reward Margin            -0.001231     < 0 (neg)           ✅  ║
+2026-03-30 09:14:43   ║  Sigma Term                1.000000       0.5~0.9          ⚠️  ║
+2026-03-30 09:14:43   ║  KL Divergence             0.053355         small           —  ║
+2026-03-30 09:14:43   ║  MSE (win)                 0.100135             ↓           —  ║
+2026-03-30 09:14:43   ║  MSE (lose)                0.116232   ↑ or stable           —  ║
+2026-03-30 09:14:43   ║  Ref MSE (win)             0.000857      baseline           —  ║
+2026-03-30 09:14:43   ║  Ref MSE (lose)            0.002088      baseline           —  ║
+2026-03-30 09:14:43   ║  DGR (grad norm)           0.001457   > 0 (alive)           ✅  ║
+2026-03-30 09:14:43   ════════════════════════════════════════════════════════════════════════
+2026-03-30 09:14:43 
+2026-03-30 09:14:43 Steps:  16%|█▋        | 3278/20000 [3:28:54<16:08:41,  3.48s/it, dpo_loss=0.0000, implicit_acc=1.0000, lose_gap=0.1278, mse_l=1.2128, mse_w=0.2155, win_gap=0.0253]
