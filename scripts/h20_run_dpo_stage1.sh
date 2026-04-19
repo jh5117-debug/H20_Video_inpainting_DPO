@@ -2,7 +2,11 @@
 set -euo pipefail
 
 PROJECT_ROOT="${PROJECT_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)}"
-CONDA_ENV="${CONDA_ENV:-diffueraser}"
+if [[ -z "${CONDA_ENV:-}" && -d "/home/nvme01/conda_envs/diffueraser" ]]; then
+  CONDA_ENV="/home/nvme01/conda_envs/diffueraser"
+else
+  CONDA_ENV="${CONDA_ENV:-diffueraser}"
+fi
 
 export CUDA_DEVICE_ORDER="${CUDA_DEVICE_ORDER:-PCI_BUS_ID}"
 export CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-4,5,6,7}"
