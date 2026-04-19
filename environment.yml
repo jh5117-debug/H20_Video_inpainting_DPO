@@ -99,7 +99,7 @@ dependencies:
       - nvidia-nccl-cu12==2.20.5
       - nvidia-nvjitlink-cu12==12.9.86
       - nvidia-nvtx-cu12==12.1.105
-      - open-clip-torch==3.2.0
+      - open-clip-torch==2.24.0
       - opencv-python==4.9.0.80
       - packaging==25.0
       - pandas==2.3.3
