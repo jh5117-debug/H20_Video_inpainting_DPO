@@ -66,6 +66,7 @@ REF_MODEL_PATH="${REF_MODEL_PATH:-}"
 CHUNK_ALIGNED="${CHUNK_ALIGNED:-1}"
 XFORMERS="${XFORMERS:-0}"
 GRADIENT_CHECKPOINTING="${GRADIENT_CHECKPOINTING:-1}"
+MAIN_PROCESS_PORT="${MAIN_PROCESS_PORT:-0}"
 
 REF_MODEL_ARG=()
 if [[ -n "${REF_MODEL_PATH}" ]]; then
@@ -115,6 +116,7 @@ python training/dpo/scripts/run_stage1.py \
   --nframes "${NFRAMES:-16}" \
   --seed "${SEED:-42}" \
   --mixed_precision "${MIXED_PRECISION:-bf16}" \
+  --main_process_port "${MAIN_PROCESS_PORT}" \
   --wandb_project "${WANDB_PROJECT:-DPO_Diffueraser}" \
   --beta_dpo "${BETA_DPO:-500.0}" \
   --davis_oversample "${DAVIS_OVERSAMPLE:-10}" \

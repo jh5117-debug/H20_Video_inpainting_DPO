@@ -68,6 +68,7 @@ BASELINE_UNET_PATH="${BASELINE_UNET_PATH:-${WEIGHTS_DIR}/diffuEraser}"
 CHUNK_ALIGNED="${CHUNK_ALIGNED:-1}"
 XFORMERS="${XFORMERS:-0}"
 GRADIENT_CHECKPOINTING="${GRADIENT_CHECKPOINTING:-1}"
+MAIN_PROCESS_PORT="${MAIN_PROCESS_PORT:-0}"
 
 PRETRAINED_DPO_S1_ARG=()
 if [[ -n "${PRETRAINED_DPO_S1}" ]]; then
@@ -123,6 +124,7 @@ python training/dpo/scripts/run_stage2.py \
   --nframes "${NFRAMES:-16}" \
   --seed "${SEED:-42}" \
   --mixed_precision "${MIXED_PRECISION:-bf16}" \
+  --main_process_port "${MAIN_PROCESS_PORT}" \
   --wandb_project "${WANDB_PROJECT:-DPO_Diffueraser}" \
   --beta_dpo "${BETA_DPO:-500.0}" \
   --davis_oversample "${DAVIS_OVERSAMPLE:-10}" \

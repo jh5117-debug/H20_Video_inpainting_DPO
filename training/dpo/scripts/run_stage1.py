@@ -65,6 +65,10 @@ def build_cmd(project_root, args):
         "accelerate", "launch",
         "--num_processes", str(args.num_gpus),
         "--mixed_precision", args.mixed_precision,
+    ]
+    if args.main_process_port is not None:
+        cmd.extend(["--main_process_port", str(args.main_process_port)])
+    cmd.extend([
         "training/dpo/train_stage1.py",
         "--base_model_name_or_path", os.path.join(weights_dir, "stable-diffusion-v1-5"),
         "--vae_path", os.path.join(weights_dir, "sd-vae-ft-mse"),
@@ -90,7 +94,7 @@ def build_cmd(project_root, args):
         "--tracker_project_name", args.wandb_project,
         "--set_grads_to_none",
         "--resume_from_checkpoint", "latest",
-    ]
+    ])
 
     if args.enable_xformers:
         cmd.append("--enable_xformers_memory_efficient_attention")
@@ -254,6 +258,7 @@ def run(args=None):
     print(f"  Beta DPO:        {args.beta_dpo}")
     print(f"  LR:              {args.learning_rate}")
     print(f"  Mixed Precision: {args.mixed_precision}")
+    print(f"  Main Port:       {args.main_process_port}")
     print(f"  XFormers:        {args.enable_xformers}")
     print(f"  Grad Ckpt:       {not args.disable_gradient_checkpointing}")
     print("=" * 60)
@@ -289,6 +294,7 @@ def parse_args():
     parser.add_argument("--nframes", type=int, default=16)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--mixed_precision", type=str, default="fp16")
+    parser.add_argument("--main_process_port", type=str, default=None)
     parser.add_argument("--wandb_project", type=str, default="DPO_Diffueraser")
     parser.add_argument("--wandb_entity", type=str, default=None)
     parser.add_argument("--beta_dpo", type=float, default=500.0)
