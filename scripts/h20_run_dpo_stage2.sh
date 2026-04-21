@@ -73,6 +73,21 @@ sanitize_path_component() {
   printf '%s' "$1" | tr -c 'A-Za-z0-9._-' '-' | sed -e 's/^-*//' -e 's/-*$//'
 }
 
+choose_free_port() {
+  python - <<'PY'
+import socket
+
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+    sock.bind(("127.0.0.1", 0))
+    print(sock.getsockname()[1])
+PY
+}
+
+if [[ -z "${MAIN_PROCESS_PORT}" || "${MAIN_PROCESS_PORT}" == "0" || "${MAIN_PROCESS_PORT,,}" == "auto" ]]; then
+  MAIN_PROCESS_PORT="$(choose_free_port)"
+fi
+export MAIN_PROCESS_PORT
+
 DEFAULT_DPO_LOG_ROOT="/home/nvme03/workspace/world_model_phys/Diffueraser_DPO_Log"
 DPO_LOG_ROOT="${DPO_LOG_ROOT:-${DEFAULT_DPO_LOG_ROOT}}"
 if ! mkdir -p "${DPO_LOG_ROOT}" 2>/dev/null; then
@@ -101,6 +116,7 @@ fi
 echo "[h20 launcher] External log root: ${DPO_LOG_ROOT}"
 echo "[h20 launcher] Run log dir:      ${DPO_RUN_LOG_DIR}"
 echo "[h20 launcher] Train stdout log: ${DPO_STDOUT_LOG}"
+echo "[h20 launcher] Main process port: ${MAIN_PROCESS_PORT}"
 
 PRETRAINED_DPO_S1_ARG=()
 if [[ -n "${PRETRAINED_DPO_S1}" ]]; then

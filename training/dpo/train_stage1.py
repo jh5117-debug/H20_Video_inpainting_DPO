@@ -1369,7 +1369,10 @@ if __name__ == "__main__":
     except Exception as e:
         import traceback
         tb = traceback.format_exc()
-        logger.error(f"Training crashed!\n{tb}")
+        try:
+            logger.error(f"Training crashed!\n{tb}")
+        except Exception:
+            print(f"Training crashed!\n{tb}", file=sys.stderr)
         if is_wandb_available() and wandb.run is not None:
             try:
                 sync_console_logs_to_wandb(args.output_dir, policy="now")
