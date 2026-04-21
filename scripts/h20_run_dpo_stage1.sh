@@ -46,6 +46,7 @@ conda activate "${CONDA_ENV}"
 cd "${PROJECT_ROOT}"
 
 export PYTHONUNBUFFERED=1
+export PYTORCH_CUDA_ALLOC_CONF="${PYTORCH_CUDA_ALLOC_CONF:-expandable_segments:True}"
 export HF_ENDPOINT="${HF_ENDPOINT:-https://hf-mirror.com}"
 export WANDB_DIR="${WANDB_DIR:-${PROJECT_ROOT}/.wandb_cache}"
 export WANDB_CACHE_DIR="${WANDB_CACHE_DIR:-${PROJECT_ROOT}/.wandb_cache}"
