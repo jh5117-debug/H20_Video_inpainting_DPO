@@ -48,27 +48,57 @@ cd "${PROJECT_ROOT}"
 export PYTHONUNBUFFERED=1
 export PYTORCH_CUDA_ALLOC_CONF="${PYTORCH_CUDA_ALLOC_CONF:-expandable_segments:True}"
 export HF_ENDPOINT="${HF_ENDPOINT:-https://hf-mirror.com}"
-export WANDB_DIR="${WANDB_DIR:-${PROJECT_ROOT}/.wandb_cache}"
-export WANDB_CACHE_DIR="${WANDB_CACHE_DIR:-${PROJECT_ROOT}/.wandb_cache}"
-export WANDB_DATA_DIR="${WANDB_DATA_DIR:-${PROJECT_ROOT}/.wandb_cache}"
-export WANDB_CONFIG_DIR="${WANDB_CONFIG_DIR:-${PROJECT_ROOT}/.wandb_cache/config}"
 export HF_HOME="${HF_HOME:-${PROJECT_ROOT}/.hf_cache}"
 export TRANSFORMERS_CACHE="${TRANSFORMERS_CACHE:-${PROJECT_ROOT}/.hf_cache}"
 export TMPDIR="${TMPDIR:-${PROJECT_ROOT}/.tmp}"
-mkdir -p "${WANDB_DIR}" "${WANDB_CONFIG_DIR}" "${HF_HOME}" "${TMPDIR}" logs
+mkdir -p "${HF_HOME}" "${TMPDIR}" logs
 
 WEIGHTS_DIR="${WEIGHTS_DIR:-${PROJECT_ROOT}/weights}"
 DPO_DATA_ROOT="${DPO_DATA_ROOT:-${PROJECT_ROOT}/data/external/DPO_Finetune_data}"
 VAL_DATA_DIR="${VAL_DATA_DIR:-${PROJECT_ROOT}/data/external/davis_432_240}"
 EXPERIMENTS_DIR="${EXPERIMENTS_DIR:-${PROJECT_ROOT}/experiments}"
 RUN_NAME="${RUN_NAME:-h20-stage1}"
-RUN_VERSION="${RUN_VERSION:-}"
+RUN_VERSION="${RUN_VERSION:-$(date -u +%Y%m%d_%H%M%S)}"
+export RUN_VERSION
 REF_MODEL_PATH="${REF_MODEL_PATH:-}"
 CHUNK_ALIGNED="${CHUNK_ALIGNED:-1}"
 XFORMERS="${XFORMERS:-0}"
 GRADIENT_CHECKPOINTING="${GRADIENT_CHECKPOINTING:-1}"
 MAIN_PROCESS_PORT="${MAIN_PROCESS_PORT:-0}"
 SPLIT_POS_NEG_FORWARD="${SPLIT_POS_NEG_FORWARD:-1}"
+
+sanitize_path_component() {
+  printf '%s' "$1" | tr -c 'A-Za-z0-9._-' '-' | sed -e 's/^-*//' -e 's/-*$//'
+}
+
+DEFAULT_DPO_LOG_ROOT="/home/nvme03/workspace/world_model_phys/Diffueraser_DPO_Log"
+DPO_LOG_ROOT="${DPO_LOG_ROOT:-${DEFAULT_DPO_LOG_ROOT}}"
+if ! mkdir -p "${DPO_LOG_ROOT}" 2>/dev/null; then
+  DPO_LOG_ROOT="${PROJECT_ROOT}/logs/Diffueraser_DPO_Log"
+  mkdir -p "${DPO_LOG_ROOT}"
+fi
+
+RUN_NAME_SLUG="$(sanitize_path_component "${RUN_NAME}")"
+DPO_RUN_LOG_DIR="${DPO_RUN_LOG_DIR:-${DPO_LOG_ROOT}/${RUN_VERSION}_${RUN_NAME_SLUG}}"
+DPO_EXTERNAL_LOG_DIR="${DPO_EXTERNAL_LOG_DIR:-${DPO_RUN_LOG_DIR}/experiment}"
+DPO_STDOUT_LOG="${DPO_STDOUT_LOG:-${DPO_RUN_LOG_DIR}/train_stdout.log}"
+mkdir -p "${DPO_RUN_LOG_DIR}" "${DPO_EXTERNAL_LOG_DIR}"
+export DPO_LOG_ROOT DPO_RUN_LOG_DIR DPO_EXTERNAL_LOG_DIR
+
+export WANDB_DIR="${WANDB_DIR:-${DPO_RUN_LOG_DIR}/wandb}"
+export WANDB_CACHE_DIR="${WANDB_CACHE_DIR:-${DPO_RUN_LOG_DIR}/wandb}"
+export WANDB_DATA_DIR="${WANDB_DATA_DIR:-${DPO_RUN_LOG_DIR}/wandb}"
+export WANDB_CONFIG_DIR="${WANDB_CONFIG_DIR:-${DPO_RUN_LOG_DIR}/wandb/config}"
+mkdir -p "${WANDB_DIR}" "${WANDB_CONFIG_DIR}"
+
+if [[ "${DPO_TEE_STDOUT:-1}" != "0" && -z "${DPO_STDOUT_TEE_ACTIVE:-}" ]]; then
+  export DPO_STDOUT_TEE_ACTIVE=1
+  exec > >(tee -a "${DPO_STDOUT_LOG}") 2>&1
+fi
+
+echo "[h20 launcher] External log root: ${DPO_LOG_ROOT}"
+echo "[h20 launcher] Run log dir:      ${DPO_RUN_LOG_DIR}"
+echo "[h20 launcher] Train stdout log: ${DPO_STDOUT_LOG}"
 
 REF_MODEL_ARG=()
 if [[ -n "${REF_MODEL_PATH}" ]]; then

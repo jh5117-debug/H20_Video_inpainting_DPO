@@ -166,6 +166,9 @@ class TeeStream:
 
 
 def get_console_log_dir(output_dir):
+    external_log_dir = os.environ.get("DPO_EXTERNAL_LOG_DIR")
+    if external_log_dir:
+        return os.path.join(external_log_dir, "console_logs")
     return os.path.join(output_dir, "console_logs")
 
 
@@ -256,11 +259,18 @@ def save_wandb_run_info(output_dir, args):
         "slurm_job_id": os.environ.get("SLURM_JOB_ID"),
     }
 
-    save_path = os.path.join(output_dir, "wandb_run_info.json")
-    tmp_path = save_path + ".tmp"
-    with open(tmp_path, "w") as f:
-        json.dump(run_info, f, indent=2)
-    os.replace(tmp_path, save_path)
+    save_dirs = [output_dir]
+    external_log_dir = os.environ.get("DPO_EXTERNAL_LOG_DIR")
+    if external_log_dir:
+        save_dirs.append(external_log_dir)
+
+    for save_dir in save_dirs:
+        os.makedirs(save_dir, exist_ok=True)
+        save_path = os.path.join(save_dir, "wandb_run_info.json")
+        tmp_path = save_path + ".tmp"
+        with open(tmp_path, "w") as f:
+            json.dump(run_info, f, indent=2)
+        os.replace(tmp_path, save_path)
 
 
 # ============================================================

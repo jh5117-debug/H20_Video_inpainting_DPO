@@ -117,10 +117,14 @@ def prepare_experiment_dir(
             "status_short": _git_value(root, ["status", "--short"]),
         },
     }
-    (output_dir / "run_manifest.json").write_text(
-        json.dumps(manifest, indent=2, ensure_ascii=False) + "\n",
-        encoding="utf-8",
-    )
+    manifest_text = json.dumps(manifest, indent=2, ensure_ascii=False) + "\n"
+    (output_dir / "run_manifest.json").write_text(manifest_text, encoding="utf-8")
+
+    external_log_dir = os.environ.get("DPO_EXTERNAL_LOG_DIR")
+    if external_log_dir:
+        external_dir = Path(external_log_dir).expanduser().resolve()
+        external_dir.mkdir(parents=True, exist_ok=True)
+        (external_dir / "run_manifest.json").write_text(manifest_text, encoding="utf-8")
     return output_dir
 
 
@@ -129,4 +133,3 @@ def first_existing(*paths: str | Path | None) -> str | None:
         if path and Path(path).exists():
             return str(Path(path).resolve())
     return str(Path(paths[-1]).resolve()) if paths and paths[-1] else None
-
