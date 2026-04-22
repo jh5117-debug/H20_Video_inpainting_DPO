@@ -19,7 +19,8 @@ DIFFUERASER_ENV="${DIFFUERASER_ENV:-/home/nvme01/conda_envs/diffueraser}"
 COCOCO_HF_REPO="${COCOCO_HF_REPO:-JiaHuang01/COCOCO}"
 COCOCO_HF_REPO_TYPE="${COCOCO_HF_REPO_TYPE:-dataset}"
 COCOCO_HF_FILENAME="${COCOCO_HF_FILENAME:-OneDrive_1_2026-4-23.zip}"
-SD_INPAINT_REPO="${SD_INPAINT_REPO:-benjamin-paine/stable-diffusion-v1-5-inpainting}"
+SD_INPAINT_REPO="${SD_INPAINT_REPO:-stable-diffusion-v1-5/stable-diffusion-inpainting}"
+SD_INPAINT_REPOS="${SD_INPAINT_REPOS:-${SD_INPAINT_REPO},genai-archive/stable-diffusion-v1-5-inpainting,benjamin-paine/stable-diffusion-v1-5-inpainting}"
 MINIMAX_HF_REPO="${MINIMAX_HF_REPO:-zibojia/minimax-remover}"
 COCOCO_LOCAL_ZIP="${COCOCO_LOCAL_ZIP:-}"
 SD_INPAINT_LOCAL_DIR="${SD_INPAINT_LOCAL_DIR:-}"
@@ -61,7 +62,7 @@ fi
 
 mkdir -p "${WEIGHTS_ROOT}" "${DOWNLOAD_ROOT}"
 export PROJECT_ROOT THIRD_PARTY_ROOT WEIGHTS_ROOT DOWNLOAD_ROOT
-export COCOCO_HF_REPO COCOCO_HF_REPO_TYPE COCOCO_HF_FILENAME SD_INPAINT_REPO MINIMAX_HF_REPO
+export COCOCO_HF_REPO COCOCO_HF_REPO_TYPE COCOCO_HF_FILENAME SD_INPAINT_REPO SD_INPAINT_REPOS MINIMAX_HF_REPO
 export COCOCO_LOCAL_ZIP SD_INPAINT_LOCAL_DIR MINIMAX_LOCAL_DIR HF_LOCAL_FILES_ONLY
 export HF_ENDPOINT
 
@@ -150,6 +151,7 @@ cococo_repo = os.environ["COCOCO_HF_REPO"]
 cococo_repo_type = os.environ["COCOCO_HF_REPO_TYPE"]
 cococo_filename = os.environ["COCOCO_HF_FILENAME"]
 sd_repo = os.environ["SD_INPAINT_REPO"]
+sd_repos = [x.strip() for x in os.environ.get("SD_INPAINT_REPOS", sd_repo).split(",") if x.strip()]
 minimax_repo = os.environ["MINIMAX_HF_REPO"]
 cococo_local_zip = os.environ.get("COCOCO_LOCAL_ZIP", "").strip()
 sd_inpaint_local_dir = os.environ.get("SD_INPAINT_LOCAL_DIR", "").strip()
@@ -219,13 +221,24 @@ elif sd_inpaint_local_dir:
     for child in sd_src.iterdir():
         link_or_copy(child, sd_target / child.name)
 else:
-    print(f"[sd] SD inpainting folder not found in zip; download {sd_repo}")
-    snapshot_download(
-        repo_id=sd_repo,
-        local_dir=str(sd_target),
-        local_dir_use_symlinks=False,
-        local_files_only=local_files_only,
-    )
+    print("[sd] SD inpainting folder not found in zip; try Hugging Face repos")
+    last_error = None
+    for repo_id in sd_repos:
+        try:
+            print(f"[sd] download {repo_id}")
+            snapshot_download(
+                repo_id=repo_id,
+                local_dir=str(sd_target),
+                local_dir_use_symlinks=False,
+                local_files_only=local_files_only,
+            )
+            last_error = None
+            break
+        except Exception as exc:
+            last_error = exc
+            print(f"[sd][warn] failed {repo_id}: {exc}")
+    if last_error is not None:
+        raise last_error
 if not (sd_target / "model_index.json").exists():
     raise SystemExit(f"SD inpainting model not ready: {sd_target}")
 print(f"[sd] ready: {sd_target}")
