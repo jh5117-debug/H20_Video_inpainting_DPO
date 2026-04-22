@@ -21,6 +21,7 @@ COCOCO_HF_REPO_TYPE="${COCOCO_HF_REPO_TYPE:-dataset}"
 COCOCO_HF_FILENAME="${COCOCO_HF_FILENAME:-OneDrive_1_2026-4-23.zip}"
 SD_INPAINT_REPO="${SD_INPAINT_REPO:-stable-diffusion-v1-5/stable-diffusion-inpainting}"
 SD_INPAINT_REPOS="${SD_INPAINT_REPOS:-${SD_INPAINT_REPO},genai-archive/stable-diffusion-v1-5-inpainting,benjamin-paine/stable-diffusion-v1-5-inpainting}"
+SD_INPAINT_VARIANT="${SD_INPAINT_VARIANT:-fp16}"
 MINIMAX_HF_REPO="${MINIMAX_HF_REPO:-zibojia/minimax-remover}"
 COCOCO_LOCAL_ZIP="${COCOCO_LOCAL_ZIP:-}"
 SD_INPAINT_LOCAL_DIR="${SD_INPAINT_LOCAL_DIR:-}"
@@ -66,7 +67,7 @@ fi
 
 mkdir -p "${WEIGHTS_ROOT}" "${DOWNLOAD_ROOT}"
 export PROJECT_ROOT THIRD_PARTY_ROOT WEIGHTS_ROOT DOWNLOAD_ROOT
-export COCOCO_HF_REPO COCOCO_HF_REPO_TYPE COCOCO_HF_FILENAME SD_INPAINT_REPO SD_INPAINT_REPOS MINIMAX_HF_REPO
+export COCOCO_HF_REPO COCOCO_HF_REPO_TYPE COCOCO_HF_FILENAME SD_INPAINT_REPO SD_INPAINT_REPOS SD_INPAINT_VARIANT MINIMAX_HF_REPO
 export COCOCO_LOCAL_ZIP SD_INPAINT_LOCAL_DIR MINIMAX_LOCAL_DIR HF_LOCAL_FILES_ONLY
 export HF_ENDPOINT HF_HUB_DISABLE_XET HF_HUB_DOWNLOAD_TIMEOUT HF_HUB_ETAG_TIMEOUT HF_SNAPSHOT_MAX_WORKERS
 
@@ -77,6 +78,7 @@ echo "[weights] HF_ENDPOINT=${HF_ENDPOINT}"
 echo "[weights] HF_HUB_DISABLE_XET=${HF_HUB_DISABLE_XET}"
 echo "[weights] HF_HUB_DOWNLOAD_TIMEOUT=${HF_HUB_DOWNLOAD_TIMEOUT}"
 echo "[weights] HF_SNAPSHOT_MAX_WORKERS=${HF_SNAPSHOT_MAX_WORKERS}"
+echo "[weights] SD_INPAINT_VARIANT=${SD_INPAINT_VARIANT}"
 
 PY_SCRIPT="$(mktemp "${DOWNLOAD_ROOT}/download_multimodel_weights.XXXXXX.py")"
 cleanup() {
@@ -152,6 +154,61 @@ def find_sd_root(root: Path):
     return None
 
 
+def sd_patterns(variant: str):
+    if variant == "fp16":
+        return (
+            [
+                "model_index.json",
+                "scheduler/**",
+                "tokenizer/**",
+                "text_encoder/config.json",
+                "text_encoder/*fp16.bin",
+                "vae/config.json",
+                "vae/*fp16.bin",
+                "unet/config.json",
+                "unet/*fp16.bin",
+            ],
+            ["*.onnx", "*.msgpack"],
+        )
+    return (
+        [
+            "model_index.json",
+            "scheduler/**",
+            "tokenizer/**",
+            "text_encoder/**",
+            "vae/**",
+            "unet/**",
+        ],
+        ["*.fp16.*", "*.onnx", "*.msgpack"],
+    )
+
+
+def normalize_sd_fp16_names(root: Path) -> None:
+    for fp16_path in root.rglob("*.fp16.bin"):
+        base_path = fp16_path.with_name(fp16_path.name.replace(".fp16.bin", ".bin"))
+        if base_path != fp16_path:
+            link_or_copy(fp16_path, base_path)
+
+
+def sd_ready(root: Path) -> bool:
+    required = [
+        root / "model_index.json",
+        root / "scheduler" / "scheduler_config.json",
+        root / "tokenizer",
+        root / "text_encoder" / "config.json",
+        root / "vae" / "config.json",
+        root / "unet" / "config.json",
+    ]
+    if not all(p.exists() for p in required):
+        return False
+    weight_options = [
+        [root / "text_encoder" / "pytorch_model.bin", root / "text_encoder" / "model.safetensors"],
+        [root / "vae" / "diffusion_pytorch_model.bin", root / "vae" / "diffusion_pytorch_model.safetensors"],
+        [root / "unet" / "diffusion_pytorch_model.bin", root / "unet" / "diffusion_pytorch_model.safetensors"],
+    ]
+    return all(any(p.exists() for p in options) for options in weight_options)
+
+
 weights_root = Path(os.environ["WEIGHTS_ROOT"])
 download_root = Path(os.environ["DOWNLOAD_ROOT"])
 cococo_repo = os.environ["COCOCO_HF_REPO"]
@@ -159,6 +216,7 @@ cococo_repo_type = os.environ["COCOCO_HF_REPO_TYPE"]
 cococo_filename = os.environ["COCOCO_HF_FILENAME"]
 sd_repo = os.environ["SD_INPAINT_REPO"]
 sd_repos = [x.strip() for x in os.environ.get("SD_INPAINT_REPOS", sd_repo).split(",") if x.strip()]
+sd_inpaint_variant = os.environ.get("SD_INPAINT_VARIANT", "fp16").strip().lower()
 minimax_repo = os.environ["MINIMAX_HF_REPO"]
 cococo_local_zip = os.environ.get("COCOCO_LOCAL_ZIP", "").strip()
 sd_inpaint_local_dir = os.environ.get("SD_INPAINT_LOCAL_DIR", "").strip()
@@ -220,6 +278,7 @@ if sd_src is not None:
     sd_target.mkdir(parents=True, exist_ok=True)
     for child in sd_src.iterdir():
         link_or_copy(child, sd_target / child.name)
+    normalize_sd_fp16_names(sd_target)
 elif sd_inpaint_local_dir:
     sd_src = Path(sd_inpaint_local_dir).expanduser().resolve()
     if not (sd_src / "model_index.json").exists():
@@ -228,32 +287,24 @@ elif sd_inpaint_local_dir:
     sd_target.mkdir(parents=True, exist_ok=True)
     for child in sd_src.iterdir():
         link_or_copy(child, sd_target / child.name)
+    normalize_sd_fp16_names(sd_target)
 else:
     print("[sd] SD inpainting folder not found in zip; try Hugging Face repos")
     last_error = None
+    allow_patterns, ignore_patterns = sd_patterns(sd_inpaint_variant)
     for repo_id in sd_repos:
         try:
-            print(f"[sd] download {repo_id}")
+            print(f"[sd] download {repo_id} ({sd_inpaint_variant})")
             snapshot_download(
                 repo_id=repo_id,
-                allow_patterns=[
-                    "model_index.json",
-                    "scheduler/**",
-                    "tokenizer/**",
-                    "text_encoder/**",
-                    "vae/**",
-                    "unet/**",
-                ],
-                ignore_patterns=[
-                    "*.fp16.*",
-                    "*.onnx",
-                    "*.msgpack",
-                ],
+                allow_patterns=allow_patterns,
+                ignore_patterns=ignore_patterns,
                 local_dir=str(sd_target),
                 local_dir_use_symlinks=False,
                 local_files_only=local_files_only,
                 max_workers=hf_snapshot_max_workers,
             )
+            normalize_sd_fp16_names(sd_target)
             last_error = None
             break
         except Exception as exc:
@@ -261,7 +312,7 @@ else:
             print(f"[sd][warn] failed {repo_id}: {exc}")
     if last_error is not None:
         raise last_error
-if not (sd_target / "model_index.json").exists():
+if not sd_ready(sd_target):
     raise SystemExit(f"SD inpainting model not ready: {sd_target}")
 print(f"[sd] ready: {sd_target}")
 
