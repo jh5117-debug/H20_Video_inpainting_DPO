@@ -4,7 +4,7 @@
     "env": "/home/nvme01/conda_envs/diffueraser",
     "cwd": "/home/nvme01/H20_Video_inpainting_DPO",
     "cmd": "python DPO_finetune/infer_propainter_candidate.py --video_dir {input_dir} --mask_dir {mask_dir} --output_dir {raw_output_dir} --model_dir {third_party_root}/weights/propainter --num_frames {num_frames} --width {width} --height {height}",
-    "output_glob": "{raw_output_dir}/*.{png,jpg,jpeg}",
+    "output_glob": "{raw_output_dir}/*.{{png,jpg,jpeg}}",
     "notes": "Uses the local Propainter wrapper with return_frames=True, so it saves lossless frames instead of reading back compressed mp4."
   },
   "cococo": {
@@ -12,7 +12,7 @@
     "env": "/home/nvme01/H20_Video_inpainting_DPO/third_party_video_inpainting/envs/cococo",
     "cwd": "/home/nvme01/H20_Video_inpainting_DPO",
     "cmd": "python DPO_finetune/infer_cococo_candidate.py --repo_dir {third_party_root}/repos/COCOCO --video_dir {input_dir} --mask_dir {mask_dir} --output_dir {raw_output_dir} --work_dir {method_work_dir} --model_path {third_party_root}/weights/COCOCO_weight/cococo --pretrain_model_path {third_party_root}/weights/COCOCO_weight/stable-diffusion-v1-5-inpainting --prompt \"{prompt}\" --negative_prompt \"worst quality. bad quality.\" --guidance_scale 10 --num_samples 1 --num_frames {num_frames} --width {width} --height {height}",
-    "output_glob": "{raw_output_dir}/*.{png,jpg,jpeg}",
+    "output_glob": "{raw_output_dir}/*.{{png,jpg,jpeg}}",
     "requires_prompt": true,
     "notes": "CoCoCo is text-guided. The wrapper converts frame dirs to images.npy/masks.npy and runs the official release script."
   },
@@ -21,7 +21,7 @@
     "env": "/home/nvme01/H20_Video_inpainting_DPO/third_party_video_inpainting/envs/minimax",
     "cwd": "/home/nvme01/H20_Video_inpainting_DPO",
     "cmd": "python DPO_finetune/infer_minimax_candidate.py --repo_dir {third_party_root}/repos/MiniMax-Remover --video_dir {input_dir} --mask_dir {mask_dir} --output_dir {raw_output_dir} --model_dir {third_party_root}/weights/minimax --num_frames {num_frames} --width {width} --height {height} --num_inference_steps 12 --iterations 6",
-    "output_glob": "{raw_output_dir}/*.{png,jpg,jpeg}",
+    "output_glob": "{raw_output_dir}/*.{{png,jpg,jpeg}}",
     "notes": "Uses official MiniMax-Remover modules. It pads to a 4k+1 temporal length internally and crops back to the requested frame count."
   }
 }
