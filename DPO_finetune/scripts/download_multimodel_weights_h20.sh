@@ -25,6 +25,28 @@ COCOCO_LOCAL_ZIP="${COCOCO_LOCAL_ZIP:-}"
 SD_INPAINT_LOCAL_DIR="${SD_INPAINT_LOCAL_DIR:-}"
 MINIMAX_LOCAL_DIR="${MINIMAX_LOCAL_DIR:-}"
 HF_LOCAL_FILES_ONLY="${HF_LOCAL_FILES_ONLY:-0}"
+HF_ENDPOINT="${HF_ENDPOINT:-https://hf-mirror.com}"
+USE_H20_PROXY="${USE_H20_PROXY:-0}"
+START_H20_CLASH="${START_H20_CLASH:-0}"
+CLASH_ROOT="${CLASH_ROOT:-/home/nvme01/clash-for-linux}"
+
+if [[ "${START_H20_CLASH}" == "1" && -x "${CLASH_ROOT}/start.sh" ]]; then
+  echo "[net] start clash: ${CLASH_ROOT}/start.sh"
+  bash "${CLASH_ROOT}/start.sh" || true
+fi
+
+if [[ "${USE_H20_PROXY}" == "1" ]]; then
+  if [[ -f "${CLASH_ROOT}/clash.sh" ]]; then
+    echo "[net] enable H20 proxy from ${CLASH_ROOT}/clash.sh"
+    set +u
+    # shellcheck disable=SC1090
+    source "${CLASH_ROOT}/clash.sh"
+    proxy_on || true
+    set -u
+  else
+    echo "[net][warn] clash.sh not found: ${CLASH_ROOT}/clash.sh"
+  fi
+fi
 
 PYTHON_BIN="${PYTHON_BIN:-}"
 if [[ -z "${PYTHON_BIN}" ]]; then
@@ -41,10 +63,12 @@ mkdir -p "${WEIGHTS_ROOT}" "${DOWNLOAD_ROOT}"
 export PROJECT_ROOT THIRD_PARTY_ROOT WEIGHTS_ROOT DOWNLOAD_ROOT
 export COCOCO_HF_REPO COCOCO_HF_REPO_TYPE COCOCO_HF_FILENAME SD_INPAINT_REPO MINIMAX_HF_REPO
 export COCOCO_LOCAL_ZIP SD_INPAINT_LOCAL_DIR MINIMAX_LOCAL_DIR HF_LOCAL_FILES_ONLY
+export HF_ENDPOINT
 
 echo "[weights] project=${PROJECT_ROOT}"
 echo "[weights] root=${WEIGHTS_ROOT}"
 echo "[weights] python=${PYTHON_RUN[*]}"
+echo "[weights] HF_ENDPOINT=${HF_ENDPOINT}"
 
 PY_SCRIPT="$(mktemp "${DOWNLOAD_ROOT}/download_multimodel_weights.XXXXXX.py")"
 cleanup() {
