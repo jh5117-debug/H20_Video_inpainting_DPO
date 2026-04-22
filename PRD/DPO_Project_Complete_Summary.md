@@ -394,27 +394,292 @@ except Exception as e:
 
 ---
 
-## 六、当前状态与下一步
+## 六、H20 实验复盘（2026-04-21 ~ 2026-04-22）
+
+### 6.1 H20 运行环境与日志路径
+
+本轮实验迁移到 H20 机器运行，代码目录为：
+
+```bash
+/home/nvme01/H20_Video_inpainting_DPO
+```
+
+为了避免把大量日志写在代码/权重盘，H20 启动脚本已改为默认将训练日志镜像到：
+
+```bash
+/home/nvme03/workspace/world_model_phys/Diffueraser_DPO_Log
+```
+
+每次运行会创建类似如下目录：
+
+```bash
+/home/nvme03/workspace/world_model_phys/Diffueraser_DPO_Log/<RUN_VERSION>_<RUN_NAME>/
+├── train_stdout.log
+├── experiment/
+│   ├── run_manifest.json
+│   ├── wandb_run_info.json
+│   └── console_logs/rank*.log
+└── wandb/
+```
+
+模型权重仍保存在原实验目录：
+
+```bash
+/home/nvme01/H20_Video_inpainting_DPO/experiments/dpo/stage1/<RUN_VERSION>_<RUN_NAME>/
+```
+
+### 6.2 原始 2-GPU vanilla DPO 长训尝试
+
+运行配置概要：
+
+| 项 | 值 |
+|---|---|
+| GPU | `0,1` 或 `2,3` 的 2 卡实验 |
+| `MAX_STEPS` | `20000` |
+| `BATCH_SIZE` | `1` |
+| `GRAD_ACCUM` | `2` |
+| `MIXED_PRECISION` | `bf16` |
+| `GRADIENT_CHECKPOINTING` | `1` |
+| 目标 | 原始 DPO 数据集 Stage 1 长训 |
+
+本地已保留的一份关键日志：
+
+```bash
+/home/hj/H20_Video_inpainting_DPO/Diffueraser_DPO_Log/h20_dpo_stage1_p77ehlz2_20260422_000137/h20_dpo_stage1_original_data_2gpu_gpu01_split_20260421_150838.log
+```
+
+该日志显示，训练从第 300 步开始已经进入非常明显的不健康状态：
+
+| Step | `implicit_acc` | `win_gap` | `lose_gap` | `mse_win` | `ref_mse_win` | `DGR` | `loser_dominant_ratio` |
+|---:|---:|---:|---:|---:|---:|---:|---:|
+| 1 | 0.843750 | -0.000004 | 0.000096 | 0.037193 | 0.037197 | 75.248701 | 1.000000 |
+| 300 | 1.000000 | 0.058843 | 0.120061 | 0.064548 | 0.005705 | 0.000071 | 1.000000 |
+| 600 | 1.000000 | 0.098237 | 0.123641 | 0.099192 | 0.000954 | 0.408249 | 1.000000 |
+| 1200 | 1.000000 | 0.112232 | 0.131490 | 0.112617 | 0.000385 | 7.607672 | 1.000000 |
+| 1800 | 1.000000 | 0.120868 | 0.303063 | 0.176040 | 0.055172 | 0.000000 | 1.000000 |
+| 2100 | 1.000000 | 0.144727 | 0.319537 | 0.176502 | 0.031776 | 0.000000 | 1.000000 |
+
+关键结论：
+
+- `implicit_acc` 长期为 `1.0`，不是健康成功，而是偏好排序过早饱和。
+- `loser_dominant_ratio` 从头到尾几乎为 `1.0`，说明正确排序主要来自 loser 被进一步恶化。
+- `win_gap` 长期为正，且 `mse_win` 显著高于 `ref_mse_win`，说明 policy 在 GT/winner 上比 reference 更差。
+- `DGR` 多次降到接近 `0`，DPO 梯度在中后期基本失活。
+
+这说明当前 vanilla DPO 的主要问题不是“训练步数不够”，而是**目标函数和偏好对组合后存在明确捷径**：模型通过扩大 loser 误差完成排序，而不是提高 winner/GT 侧质量。
+
+### 6.3 训练停止与 OOM 现象
+
+H20 上出现过两类停止：
+
+1. **SIGHUP 终止**
+   - 早期 `nohup bash -lc '...'` 运行在当前 shell/session 生命周期下，断开或关闭终端后触发 `SIGHUP`，导致 `torch.distributed.elastic` 关闭 workers。
+   - 后续改为 `setsid nohup bash -lc '...' </dev/null >/dev/null 2>&1 &`，避免随终端关闭而退出。
+
+2. **CUDA OOM**
+   - 2-GPU Stage 1 训练曾报：
+     ```text
+     torch.cuda.OutOfMemoryError: CUDA out of memory. Tried to allocate 320.00 MiB.
+     ```
+   - 日志 grep 未出现 `Running validation` 或 `Saved state`，因此该次 OOM 更像是训练前向/反向过程的显存峰值，而不是 validation 本身撑爆。
+
+为降低显存，后续引入过：
+
+- `GRADIENT_CHECKPOINTING=1`
+- `bf16`
+- policy/ref forward 内存峰值优化
+- pos/neg split forward 选项
+- H20 外部日志根目录
+- `MAIN_PROCESS_PORT=0` 自动解析为真实空闲端口
+
+但本轮实验显示：显存与启动稳定性只是工程问题，真正的科学问题仍是 vanilla DPO 指标退化。
+
+### 6.4 `MAIN_PROCESS_PORT=0` 与 split forward 的工程结论
+
+H20 上曾使用：
+
+```bash
+MAIN_PROCESS_PORT=0
+```
+
+直接传给 `accelerate` 后，出现：
+
+```text
+DistNetworkError: timed out while trying to connect to (127.0.0.1, 0)
+```
+
+因此启动脚本已修复：当 `MAIN_PROCESS_PORT=0` 或 `auto` 时，先在 localhost 上解析一个真实空闲 TCP 端口，再传给 `accelerate`。
+
+另外，`SPLIT_POS_NEG_FORWARD=1` 在 H20 DDP 下不稳定：
+
+| GPU 配置 | `SPLIT_POS_NEG_FORWARD` | 结果 |
+|---|---:|---|
+| `0,1,4,5,6,7` | `1` | Step 0 `SIGFPE` |
+| `4,5,6,7` | `1` | Step 0 `SIGFPE` |
+| `4,5,6,7` | `0` | 成功跑完 600 step |
+
+当前建议：**正式实验暂时使用 `SPLIT_POS_NEG_FORWARD=0`**。split forward 后续可单独在 1 卡/无 gradient checkpointing/无 bf16 的条件下排查。
+
+### 6.5 β=50 的 600-step 探针实验
+
+成功完成的一次关键探针：
+
+| 项 | 值 |
+|---|---|
+| Run name | `h20-dpo-stage1-probe-beta50-600step-gpu4567-nosplit` |
+| GPU | `4,5,6,7` |
+| `MAX_STEPS` | `600` |
+| `BATCH_SIZE` | `1` |
+| `GRAD_ACCUM` | `1` |
+| `BETA_DPO` | `50` |
+| `SPLIT_POS_NEG_FORWARD` | `0` |
+| W&B run | `https://wandb.ai/WorldModel_11/DPO_Diffueraser/runs/zh4qk7px` |
+| H20 log | `/home/nvme03/workspace/world_model_phys/Diffueraser_DPO_Log/20260421_224309_h20-dpo-stage1-probe-beta50-600step-gpu4567-nosplit/train_stdout.log` |
+| Last weights | `/home/nvme01/H20_Video_inpainting_DPO/experiments/dpo/stage1/20260421_224309_h20-dpo-stage1-probe-beta50-600step-gpu4567-nosplit/last_weights` |
+
+Step 600 诊断表：
+
+| 指标 | 值 | 判断 |
+|---|---:|---|
+| `L_dpo` | 0.007126 | 已很低 |
+| `implicit_acc` | 1.000000 | 过度饱和 |
+| `win_gap` | 0.124823 | winner/GT 变差 |
+| `lose_gap` | 0.359212 | loser 变差 |
+| `reward_margin` | -0.015021 | 排序方向表面正确 |
+| `sigma_term` | 0.992983 | sigmoid 接近饱和 |
+| `kl_divergence` | 0.121009 | policy 已明显偏离 ref |
+| `mse_win` | 0.134755 | 高于 ref |
+| `mse_lose` | 0.384165 | 高于 ref |
+| `ref_mse_win` | 0.009932 | ref 在 GT 上好得多 |
+| `ref_mse_lose` | 0.024953 | ref 在 loser 上也好得多 |
+| `DGR` | 3.175381 | 梯度仍未完全死亡 |
+| `inside_term_mean` | 5.840755 | 仍偏大 |
+| `loser_dominant_ratio` | 1.000000 | 仍完全由 loser degradation 主导 |
+
+结论：
+
+- 将 `beta_dpo` 从 `500/2500` 降到 `50` 可以降低一部分饱和速度，但**不能解决根问题**。
+- 即使 β=50，训练仍然主要通过恶化 loser 建立偏好差距。
+- `win_gap > 0` 且 `mse_win >> ref_mse_win` 说明 GT/winner 侧没有被保护，policy 对 winner 的噪声预测变差。
+- 600 step 结束时 DGR 仍大于 0，说明梯度尚未完全死亡，但方向已经不健康。
+
+### 6.6 对当前偏好对构建的判断
+
+当前数据构建方式的核心假设是：
+
+```text
+win = GT
+lose = 人工制造的退化补全结果
+```
+
+这个方向本身适合 BR（Background Restoration），但本轮实验表明：
+
+1. 负样本可能过于 catastrophic  
+   `blur / hallucination / flicker` 这类人工退化和 GT 差距太大，导致 DPO 排序任务过于容易，`implicit_acc` 很快到 `1.0`。
+
+2. 16 帧 chunk 评分偏短  
+   16 帧与训练 `nframes=16` 对齐，显存和实现更简单，但对长程时序漂移、背景慢变、身份不一致等问题敏感度不足。
+
+3. 选 absolute worst 会放大坏信号  
+   每个 chunk 直接选最差负样本，容易让训练学到“识别/惩罚极端坏样本”，而不是学习真实修复质量排序。
+
+下一版数据更适合改为：
+
+```text
+win = GT
+lose candidates = DiffuEraser / ProPainter / CoCoCo / MiniMax / 旧 checkpoint / 弱采样配置
+hard_neg = 从 candidate pool 中筛选 hard but plausible loser
+```
+
+也就是说，候选 loser 应来自真实 inpainting 模型输出，而不是只依赖人工制造的极端退化；筛选时不再选 absolute worst，而是保留“GT 明显更好，但 loser 仍然像一个合理修复结果”的中等难度样本。
+
+### 6.7 当前科学结论
+
+本轮 H20 实验给出的结论非常明确：
+
+> **不建议继续对当前偏好对运行 vanilla DPO 长训。**
+
+原因不是训练还不够长，也不是 β 还没调好，而是：
+
+- `implicit_acc=1.0` 与 `loser_dominant_ratio=1.0` 同时出现；
+- `win_gap` 长期为正；
+- `mse_win` 明显高于 `ref_mse_win`；
+- 降到 `beta=50` 后仍然出现相同模式；
+- 因此模型的“成功排序”主要来自 loser degradation，而不是 winner improvement。
+
+这与 `/home/hj/DPO如何融入/Region-Reg-DPO_完整数学推导_终版.md` 中对 vanilla DPO 的风险分析一致：纯 DPO 只有相对约束，没有持续的 winner/SFT 锚定，容易走向破坏 winner 的捷径。
+
+## 七、当前状态与下一步
 
 ### 当前状态
-- ✅ Stage 1 代码审计完成，所有已知 bug 修复
-- ✅ Stage 2 代码审计完成，所有已知 bug 修复
-- ✅ 数据集路径兼容性修复
-- ✅ WandB 异常捕获已添加
-- ✅ 已完成首次 Stage 1 集群试跑与日志复盘
-- ✅ 已完成 `beta_dpo=500` + 全局监控 + scope 化的代码修订
-- ⏳ 待重新提交 Stage 1（beta=500）
 
-### 下一步
-1. 集群 `git pull` + 重新提交 Stage 1 训练（`beta_dpo=500`）
-2. 重点监控前 500~1000 步的 `global/implicit_acc`、`global/inside_term_*`、`rank0/win_gap`、`global/loser_dominant_ratio`
-3. Stage 1 完成后提交 Stage 2
-4. 若 vanilla DPO 仍快速饱和，下一阶段再考虑引入论文 Reg-DPO 的 SFT regularization 项
-5. 后续：Region-Reg 融合（不在本阶段范围内）
+- ✅ Stage 1 / Stage 2 DPO 基础代码已跑通并完成多轮工程修复
+- ✅ H20 日志已统一写入 `/home/nvme03/workspace/world_model_phys/Diffueraser_DPO_Log`
+- ✅ `MAIN_PROCESS_PORT=0/auto` 已修复为自动解析真实端口
+- ✅ 原始 2-GPU vanilla DPO 长训尝试已完成复盘，指标不健康
+- ✅ β=50 / 600-step / 4-GPU / no-split 探针已成功跑完，仍显示 vanilla DPO 退化
+- ⚠️ `SPLIT_POS_NEG_FORWARD=1` 在 H20 DDP 下会触发 `SIGFPE`，暂不作为默认路径
+- ⚠️ 当前偏好对与纯 DPO objective 不适合继续直接长训
 
-### 集群运行命令
-```bash
-cd ${PROJECT_HOME}/dev/Reg_DPO_Inpainting
-git pull origin main
-BETA_DPO=500.0 NUM_GPUS=8 MAX_STEPS=20000 VAL_STEPS=2000 sbatch DPO_finetune/scripts/03_dpo_stage1.sbatch
-```
+### 下一步建议
+
+1. **先实现 winner/SFT anchor，而不是继续 vanilla DPO 长训**
+
+   最小版本：
+
+   ```text
+   loss = dpo_loss + λ * mse_win
+   ```
+
+   或者：
+
+   ```text
+   loss = dpo_loss + λ * relu(win_gap)
+   ```
+
+   目标是强制 `win_gap` 回到 `<= 0` 附近，避免模型靠破坏 winner 获胜。
+
+2. **随后升级到 Region-Reg-DPO**
+
+   对应文档中的分区正则项：
+
+   ```text
+   loss = region_dpo_loss
+        + rho_h * mse_win_hole
+        + rho_b * mse_win_boundary
+        + rho_c * mse_win_context
+   ```
+
+   初始可先用统一 winner anchor 验证方向，再引入洞内/边界/上下文分区权重。
+
+3. **重构偏好对数据**
+
+   下一版数据建议：
+
+   - `win = GT`
+   - `lose candidates = DiffuEraser + ProPainter + CoCoCo + MiniMax + old checkpoints`
+   - mask 外区域全部强制 composite 回 GT，确保 pos/neg 收到同一道考题
+   - 评分窗口从单一 16 帧扩展到 32/48 帧，增强对时序一致性的敏感度
+   - 不再直接选 absolute worst，而是筛选 hard-but-plausible loser
+
+4. **VideoDPO 复现降级为参考校准，不作为当前主线 blocker**
+
+   VideoDPO 的开源实现可以用于观察成功 DPO 工作中的曲线形态，但当前实验已经足够说明：本项目的主要矛盾在自己的 pair 构造和缺少 winner regularization，而不是缺少完整 VideoDPO 复现。
+
+5. **下一轮探针建议**
+
+   ```text
+   BETA_DPO=5 或 10
+   WINNER_ANCHOR_WEIGHT=0.05 / 0.1 / 0.2
+   SPLIT_POS_NEG_FORWARD=0
+   MAX_STEPS=600
+   ```
+
+   健康目标：
+
+   - `implicit_acc` 不要长期贴 `1.0`
+   - `loser_dominant_ratio` 不要长期贴 `1.0`
+   - `win_gap` 接近 `0` 或 `< 0`
+   - `lose_gap > 0`
+   - `mse_win` 不应显著高于 `ref_mse_win`
+   - `sigma_term` 不要长期接近 `1.0`

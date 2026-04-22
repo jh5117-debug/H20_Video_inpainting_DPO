@@ -1,0 +1,27 @@
+{
+  "propainter": {
+    "enabled": true,
+    "env": "/home/nvme01/conda_envs/diffueraser",
+    "cwd": "/home/nvme01/H20_Video_inpainting_DPO",
+    "cmd": "python DPO_finetune/infer_propainter_candidate.py --video_dir {input_dir} --mask_dir {mask_dir} --output_dir {raw_output_dir} --model_dir {project_root}/weights/propainter --num_frames {num_frames} --width {width} --height {height}",
+    "output_glob": "{raw_output_dir}/*.{png,jpg,jpeg}",
+    "notes": "Uses the local Propainter wrapper with return_frames=True, so it saves lossless frames instead of reading back compressed mp4."
+  },
+  "cococo": {
+    "enabled": false,
+    "env": "/home/nvme01/H20_Video_inpainting_DPO/third_party_video_inpainting/envs/cococo",
+    "cwd": "/home/nvme01/H20_Video_inpainting_DPO/third_party_video_inpainting/repos/COCOCO",
+    "cmd": "TODO_COCOCO_INFERENCE --video {input_dir} --mask {mask_dir} --prompt \"{prompt}\" --output {raw_output_dir}",
+    "output_glob": "{raw_output_dir}/**/*.{png,jpg,jpeg}",
+    "requires_prompt": true,
+    "notes": "CoCoCo is text-guided; fill this command from its official README after setup_multimodel_h20.sh clones the repo."
+  },
+  "minimax": {
+    "enabled": false,
+    "env": "/home/nvme01/H20_Video_inpainting_DPO/third_party_video_inpainting/envs/minimax",
+    "cwd": "/home/nvme01/H20_Video_inpainting_DPO/third_party_video_inpainting/repos/MiniMax-Remover",
+    "cmd": "TODO_MINIMAX_INFERENCE --video {input_dir} --mask {mask_dir} --output {raw_output_dir}",
+    "output_glob": "{raw_output_dir}/**/*.{png,jpg,jpeg}",
+    "notes": "Fill this command from the MiniMax-Remover README. It does not need a text prompt."
+  }
+}
