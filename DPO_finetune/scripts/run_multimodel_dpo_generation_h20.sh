@@ -16,7 +16,7 @@ CAPTION_JSON="${CAPTION_JSON:-}"
 
 mkdir -p "${OUT_ROOT}"
 
-export CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-1,2,3}"
+export CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-0,1,2,3}"
 export VBENCH_ROOT="${VBENCH_ROOT:-${THIRD_PARTY_ROOT}/repos/VBench}"
 
 ARGS=(
@@ -27,7 +27,7 @@ ARGS=(
   --third_party_root "${THIRD_PARTY_ROOT}"
   --adapter_config "${ADAPTER_CONFIG}"
   --methods "${METHODS:-propainter,cococo,minimax}"
-  --gpus "${GPUS:-1,2,3}"
+  --gpus "${GPUS:-0,1,2,3}"
   --num_videos "${NUM_VIDEOS:-0}"
   --max_frames "${MAX_FRAMES:-48}"
   --height "${HEIGHT:-512}"
@@ -36,7 +36,7 @@ ARGS=(
   --score_windows "${SCORE_WINDOWS:-32,24,16}"
   --mask_seeds_per_video "${MASK_SEEDS_PER_VIDEO:-1}"
   --mask_dilation_iter "${MASK_DILATION_ITER:-8}"
-  --parallel_methods "${PARALLEL_METHODS:-3}"
+  --parallel_methods "${PARALLEL_METHODS:-4}"
   --resume
 )
 

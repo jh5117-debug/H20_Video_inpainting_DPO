@@ -34,21 +34,28 @@ bash DPO_finetune/scripts/setup_multimodel_h20.sh
 - 导出现有 DiffuEraser 环境信息。
 - 搜索 H20 上的 DAVIS / YouTube-VOS full-resolution 数据集路径。
 
-第三方权重仍以官方 README 为准下载。脚本会生成：
+第三方权重优先用统一脚本下载：
+
+```bash
+bash DPO_finetune/scripts/download_multimodel_weights_h20.sh
+```
+
+该脚本会把权重整理到同一个根目录：
+
+```text
+/home/nvme01/H20_Video_inpainting_DPO/third_party_video_inpainting/weights/
+├── COCOCO_weight/
+│   ├── cococo/model_0.pth ... model_3.pth
+│   └── stable-diffusion-v1-5-inpainting/
+├── minimax/vae,transformer,scheduler
+└── propainter/
+```
+
+脚本还会生成：
 
 ```bash
 /home/nvme01/H20_Video_inpainting_DPO/third_party_video_inpainting/WEIGHTS_TODO.md
 ```
-
-其中 MiniMax-Remover 的官方 Hugging Face 权重脚本已经放进 setup 脚本里自动尝试：
-
-```bash
-huggingface-cli download zibojia/minimax-remover \
-  --include vae transformer scheduler \
-  --local-dir /home/nvme01/H20_Video_inpainting_DPO/third_party_video_inpainting/weights/minimax
-```
-
-COCOCO 需要手动下载两个部分：Stable Diffusion Inpainting 权重，以及 CoCoCo 自己的 `model_0.pth` 到 `model_3.pth`。
 
 ## 2. 准备 adapter 配置
 
@@ -61,13 +68,13 @@ cp DPO_finetune/configs/multimodel_adapters_h20.example.json \
 vim DPO_finetune/configs/multimodel_adapters_h20.json
 ```
 
-默认 ProPainter 已经接到了本 repo 的 wrapper：
+默认三个模型都已经接到了本 repo 的 wrapper：
 
 ```bash
 python DPO_finetune/infer_propainter_candidate.py ...
+python DPO_finetune/infer_cococo_candidate.py ...
+python DPO_finetune/infer_minimax_candidate.py ...
 ```
-
-COCOCO 和 MiniMax-Remover 的命令需要按它们官方 README 填入：
 
 - COCOCO 需要 prompt。
 - ProPainter / MiniMax-Remover 不需要 prompt。
@@ -95,13 +102,13 @@ bash DPO_finetune/scripts/run_multimodel_dpo_generation_h20.sh
 
 ## 4. 一键生成 DPO 数据
 
-默认使用 GPU `1,2,3`，输出到 `/home/nvme03/workspace/world_model_phys/DPO_Finetune_Data_Multimodel_v1`：
+默认使用 GPU `0,1,2,3`，输出到 `/home/nvme03/workspace/world_model_phys/DPO_Finetune_Data_Multimodel_v1`：
 
 ```bash
 cd /home/nvme01/H20_Video_inpainting_DPO
 
-CUDA_VISIBLE_DEVICES=1,2,3 \
-GPUS=1,2,3 \
+CUDA_VISIBLE_DEVICES=0,1,2,3 \
+GPUS=0,1,2,3 \
 NUM_VIDEOS=0 \
 MAX_FRAMES=48 \
 HEIGHT=512 \
@@ -114,8 +121,8 @@ bash DPO_finetune/scripts/run_multimodel_dpo_generation_h20.sh
 先小样本 smoke test：
 
 ```bash
-CUDA_VISIBLE_DEVICES=1,2,3 \
-GPUS=1,2,3 \
+CUDA_VISIBLE_DEVICES=0,1,2,3 \
+GPUS=0,1,2,3 \
 NUM_VIDEOS=4 \
 MAX_FRAMES=32 \
 ENABLE_LPIPS=0 \
@@ -123,13 +130,14 @@ ENABLE_VBENCH=0 \
 bash DPO_finetune/scripts/run_multimodel_dpo_generation_h20.sh
 ```
 
-更推荐先按模型逐个 smoke，并生成可直接打开的 mp4 预览：
+更推荐先跑 combined smoke：每个模型都对两个视频生成预览，并尽量并行占用 GPU：
 
 ```bash
-CUDA_VISIBLE_DEVICES=1,2,3 \
-GPUS=1,2,3 \
+CUDA_VISIBLE_DEVICES=0,1,2,3 \
+GPUS=0,1,2,3 \
+REFRESH_ADAPTER_CONFIG=1 \
 METHODS=propainter,cococo,minimax \
-NUM_VIDEOS=1 \
+NUM_VIDEOS=2 \
 MAX_FRAMES=32 \
 bash DPO_finetune/scripts/smoke_multimodel_h20.sh
 ```
@@ -137,7 +145,7 @@ bash DPO_finetune/scripts/smoke_multimodel_h20.sh
 看这些文件：
 
 ```text
-<SMOKE_ROOT>/<method>/<video>/candidates/<method>/previews/gt_mask_raw_comp.mp4
+<SMOKE_ROOT>/<video>/candidates/<method>/previews/gt_mask_raw_comp.mp4
 ```
 
 四栏分别是 `GT / mask overlay / raw model output / composited candidate`。

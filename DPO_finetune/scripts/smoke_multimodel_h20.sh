@@ -10,6 +10,7 @@ DIFFUERASER_ENV="${DIFFUERASER_ENV:-/home/nvme01/conda_envs/diffueraser}"
 ADAPTER_CONFIG="${ADAPTER_CONFIG:-${PROJECT_ROOT}/DPO_finetune/configs/multimodel_adapters_h20.json}"
 SMOKE_ROOT="${SMOKE_ROOT:-/home/nvme03/workspace/world_model_phys/DPO_Multimodel_Smoke_$(date +%Y%m%d_%H%M%S)}"
 METHOD_LIST="${METHODS:-propainter,cococo,minimax}"
+SMOKE_MODE="${SMOKE_MODE:-combined}"
 
 pick_first_dir() {
   for p in "$@"; do
@@ -38,7 +39,10 @@ if [[ -z "${DAVIS_ROOT}" || -z "${YTBV_ROOT}" ]]; then
   exit 1
 fi
 
-if [[ ! -f "${ADAPTER_CONFIG}" ]]; then
+if [[ "${REFRESH_ADAPTER_CONFIG:-0}" == "1" ]]; then
+  echo "[setup] refreshing adapter config from example"
+  cp "${PROJECT_ROOT}/DPO_finetune/configs/multimodel_adapters_h20.example.json" "${ADAPTER_CONFIG}"
+elif [[ ! -f "${ADAPTER_CONFIG}" ]]; then
   echo "[setup] adapter config missing; copying example"
   cp "${PROJECT_ROOT}/DPO_finetune/configs/multimodel_adapters_h20.example.json" "${ADAPTER_CONFIG}"
 fi
@@ -51,31 +55,55 @@ echo "[smoke] davis=${DAVIS_ROOT}"
 echo "[smoke] ytbv=${YTBV_ROOT}"
 echo "[smoke] adapters=${ADAPTER_CONFIG}"
 echo "[smoke] methods=${METHOD_LIST}"
+echo "[smoke] mode=${SMOKE_MODE}"
 
-IFS=',' read -r -a METHODS_ARR <<< "${METHOD_LIST}"
-for method in "${METHODS_ARR[@]}"; do
-  method="$(echo "${method}" | xargs)"
-  [[ -n "${method}" ]] || continue
+if [[ "${SMOKE_MODE}" == "combined" ]]; then
   echo
-  echo "================ SMOKE: ${method} ================"
-  OUT_ROOT="${SMOKE_ROOT}/${method}" \
+  echo "================ SMOKE: combined multimodel ================"
+  OUT_ROOT="${SMOKE_ROOT}" \
   PROJECT_ROOT="${PROJECT_ROOT}" \
   DIFFUERASER_ENV="${DIFFUERASER_ENV}" \
   ADAPTER_CONFIG="${ADAPTER_CONFIG}" \
   DAVIS_ROOT="${DAVIS_ROOT}" \
   YTBV_ROOT="${YTBV_ROOT}" \
-  CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-1,2,3}" \
-  GPUS="${GPUS:-1,2,3}" \
-  METHODS="${method}" \
-  NUM_VIDEOS="${NUM_VIDEOS:-1}" \
+  CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-0,1,2,3}" \
+  GPUS="${GPUS:-0,1,2,3}" \
+  METHODS="${METHOD_LIST}" \
+  NUM_VIDEOS="${NUM_VIDEOS:-2}" \
   MAX_FRAMES="${MAX_FRAMES:-32}" \
   HEIGHT="${HEIGHT:-512}" \
   WIDTH="${WIDTH:-512}" \
+  PARALLEL_METHODS="${PARALLEL_METHODS:-4}" \
   ENABLE_LPIPS=0 \
   ENABLE_VBENCH=0 \
   SAVE_PREVIEWS=1 \
   bash "${PROJECT_ROOT}/DPO_finetune/scripts/run_multimodel_dpo_generation_h20.sh" || true
-done
+else
+  IFS=',' read -r -a METHODS_ARR <<< "${METHOD_LIST}"
+  for method in "${METHODS_ARR[@]}"; do
+    method="$(echo "${method}" | xargs)"
+    [[ -n "${method}" ]] || continue
+    echo
+    echo "================ SMOKE: ${method} ================"
+    OUT_ROOT="${SMOKE_ROOT}/${method}" \
+    PROJECT_ROOT="${PROJECT_ROOT}" \
+    DIFFUERASER_ENV="${DIFFUERASER_ENV}" \
+    ADAPTER_CONFIG="${ADAPTER_CONFIG}" \
+    DAVIS_ROOT="${DAVIS_ROOT}" \
+    YTBV_ROOT="${YTBV_ROOT}" \
+    CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-0,1,2,3}" \
+    GPUS="${GPUS:-0,1,2,3}" \
+    METHODS="${method}" \
+    NUM_VIDEOS="${NUM_VIDEOS:-2}" \
+    MAX_FRAMES="${MAX_FRAMES:-32}" \
+    HEIGHT="${HEIGHT:-512}" \
+    WIDTH="${WIDTH:-512}" \
+    ENABLE_LPIPS=0 \
+    ENABLE_VBENCH=0 \
+    SAVE_PREVIEWS=1 \
+    bash "${PROJECT_ROOT}/DPO_finetune/scripts/run_multimodel_dpo_generation_h20.sh" || true
+  done
+fi
 
 echo
 echo "================ PREVIEWS ================"
@@ -94,6 +122,5 @@ Best files to inspect:
   */candidates/<method>/previews/gt_mask_raw_comp.mp4
 
 If COCOCO or MiniMax produce no preview, open that method's inference.log and
-check whether DPO_finetune/configs/multimodel_adapters_h20.json still has
-enabled=false or TODO_* command strings.
+check the third-party env and weight paths printed there.
 EOF

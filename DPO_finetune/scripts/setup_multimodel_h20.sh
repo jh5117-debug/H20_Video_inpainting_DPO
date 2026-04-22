@@ -86,6 +86,13 @@ move checkpoints between Hugging Face, ModelScope, OneDrive, and Google Drive ov
 
 Recommended order:
 
+0. Unified script
+   - Run:
+     bash DPO_finetune/scripts/download_multimodel_weights_h20.sh
+   - This downloads the COCOCO Hugging Face bundle, Stable Diffusion inpainting
+     fallback weights, MiniMax weights, and links local ProPainter weights into
+     `third_party_video_inpainting/weights`.
+
 1. ProPainter
    - Open `repos/ProPainter/README.md`.
    - Put RAFT / recurrent flow completion / ProPainter checkpoints under `weights/propainter`.
@@ -94,8 +101,9 @@ Recommended order:
      and `raft-things.pth` during its first inference.
 
 2. COCOCO
-   - Open `repos/COCOCO/README.md`.
-   - Download its text-guided video inpainting checkpoints under `weights/cococo`.
+   - Open `repos/COCOCO/README.md` if the unified script fails.
+   - Download its text-guided video inpainting checkpoints under
+     `weights/COCOCO_weight/cococo`.
    - COCOCO requires a prompt; the generation script supports `--caption_json`.
    - It needs both Stable Diffusion inpainting weights and CoCoCo weights.
    - The CoCoCo README currently says the CoCoCo folder should contain model_0.pth
@@ -132,10 +140,12 @@ cat <<EOF
   ${THIRD_PARTY_ROOT}
 
 Next:
-  1. Fill ${PROJECT_ROOT}/DPO_finetune/configs/multimodel_adapters_h20.json
-     from the official README inference commands.
+  1. Run:
+     bash ${PROJECT_ROOT}/DPO_finetune/scripts/download_multimodel_weights_h20.sh
   2. Run:
      cp ${PROJECT_ROOT}/DPO_finetune/configs/multimodel_adapters_h20.example.json \\
         ${PROJECT_ROOT}/DPO_finetune/configs/multimodel_adapters_h20.json
-  3. Edit enabled/cmd/output_glob for COCOCO and MiniMax once weights are placed.
+  3. Run:
+     CUDA_VISIBLE_DEVICES=0,1,2,3 GPUS=0,1,2,3 \\
+       bash ${PROJECT_ROOT}/DPO_finetune/scripts/smoke_multimodel_h20.sh
 EOF
