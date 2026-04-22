@@ -21,6 +21,10 @@ COCOCO_HF_REPO_TYPE="${COCOCO_HF_REPO_TYPE:-dataset}"
 COCOCO_HF_FILENAME="${COCOCO_HF_FILENAME:-OneDrive_1_2026-4-23.zip}"
 SD_INPAINT_REPO="${SD_INPAINT_REPO:-benjamin-paine/stable-diffusion-v1-5-inpainting}"
 MINIMAX_HF_REPO="${MINIMAX_HF_REPO:-zibojia/minimax-remover}"
+COCOCO_LOCAL_ZIP="${COCOCO_LOCAL_ZIP:-}"
+SD_INPAINT_LOCAL_DIR="${SD_INPAINT_LOCAL_DIR:-}"
+MINIMAX_LOCAL_DIR="${MINIMAX_LOCAL_DIR:-}"
+HF_LOCAL_FILES_ONLY="${HF_LOCAL_FILES_ONLY:-0}"
 
 PYTHON_BIN="${PYTHON_BIN:-}"
 if [[ -z "${PYTHON_BIN}" ]]; then
@@ -36,6 +40,7 @@ fi
 mkdir -p "${WEIGHTS_ROOT}" "${DOWNLOAD_ROOT}"
 export PROJECT_ROOT THIRD_PARTY_ROOT WEIGHTS_ROOT DOWNLOAD_ROOT
 export COCOCO_HF_REPO COCOCO_HF_REPO_TYPE COCOCO_HF_FILENAME SD_INPAINT_REPO MINIMAX_HF_REPO
+export COCOCO_LOCAL_ZIP SD_INPAINT_LOCAL_DIR MINIMAX_LOCAL_DIR HF_LOCAL_FILES_ONLY
 
 echo "[weights] project=${PROJECT_ROOT}"
 echo "[weights] root=${WEIGHTS_ROOT}"
@@ -122,6 +127,10 @@ cococo_repo_type = os.environ["COCOCO_HF_REPO_TYPE"]
 cococo_filename = os.environ["COCOCO_HF_FILENAME"]
 sd_repo = os.environ["SD_INPAINT_REPO"]
 minimax_repo = os.environ["MINIMAX_HF_REPO"]
+cococo_local_zip = os.environ.get("COCOCO_LOCAL_ZIP", "").strip()
+sd_inpaint_local_dir = os.environ.get("SD_INPAINT_LOCAL_DIR", "").strip()
+minimax_local_dir = os.environ.get("MINIMAX_LOCAL_DIR", "").strip()
+local_files_only = os.environ.get("HF_LOCAL_FILES_ONLY", "0") == "1"
 
 hf_hub_download, snapshot_download = ensure_hf_hub()
 
@@ -131,18 +140,25 @@ sd_target = cococo_bundle / "stable-diffusion-v1-5-inpainting"
 cococo_extract = download_root / "cococo_hf_extract"
 cococo_zip = download_root / cococo_filename
 
-print(f"[cococo] download {cococo_repo}/{cococo_filename}")
-zip_path = Path(
-    hf_hub_download(
-        repo_id=cococo_repo,
-        repo_type=cococo_repo_type,
-        filename=cococo_filename,
-        local_dir=str(download_root),
-        local_dir_use_symlinks=False,
+if cococo_local_zip:
+    cococo_zip = Path(cococo_local_zip).expanduser().resolve()
+    if not cococo_zip.exists():
+        raise SystemExit(f"COCOCO_LOCAL_ZIP does not exist: {cococo_zip}")
+    print(f"[cococo] use local zip: {cococo_zip}")
+else:
+    print(f"[cococo] download {cococo_repo}/{cococo_filename}")
+    zip_path = Path(
+        hf_hub_download(
+            repo_id=cococo_repo,
+            repo_type=cococo_repo_type,
+            filename=cococo_filename,
+            local_dir=str(download_root),
+            local_dir_use_symlinks=False,
+            local_files_only=local_files_only,
+        )
     )
-)
-if zip_path != cococo_zip and zip_path.exists():
-    cococo_zip = zip_path
+    if zip_path != cococo_zip and zip_path.exists():
+        cococo_zip = zip_path
 
 marker = cococo_extract / ".extracted.ok"
 if not marker.exists():
@@ -170,25 +186,45 @@ if sd_src is not None:
     sd_target.mkdir(parents=True, exist_ok=True)
     for child in sd_src.iterdir():
         link_or_copy(child, sd_target / child.name)
+elif sd_inpaint_local_dir:
+    sd_src = Path(sd_inpaint_local_dir).expanduser().resolve()
+    if not (sd_src / "model_index.json").exists():
+        raise SystemExit(f"SD_INPAINT_LOCAL_DIR is not a diffusers model folder: {sd_src}")
+    print(f"[sd] use local SD inpainting dir: {sd_src}")
+    sd_target.mkdir(parents=True, exist_ok=True)
+    for child in sd_src.iterdir():
+        link_or_copy(child, sd_target / child.name)
 else:
     print(f"[sd] SD inpainting folder not found in zip; download {sd_repo}")
     snapshot_download(
         repo_id=sd_repo,
         local_dir=str(sd_target),
         local_dir_use_symlinks=False,
+        local_files_only=local_files_only,
     )
 if not (sd_target / "model_index.json").exists():
     raise SystemExit(f"SD inpainting model not ready: {sd_target}")
 print(f"[sd] ready: {sd_target}")
 
 minimax_target = weights_root / "minimax"
-print(f"[minimax] download {minimax_repo}")
-snapshot_download(
-    repo_id=minimax_repo,
-    allow_patterns=["vae/**", "transformer/**", "scheduler/**"],
-    local_dir=str(minimax_target),
-    local_dir_use_symlinks=False,
-)
+if minimax_local_dir:
+    minimax_src = Path(minimax_local_dir).expanduser().resolve()
+    print(f"[minimax] use local MiniMax dir: {minimax_src}")
+    for child in ["vae", "transformer", "scheduler"]:
+        if not (minimax_src / child).exists():
+            raise SystemExit(f"MINIMAX_LOCAL_DIR missing {child}/: {minimax_src}")
+        link_or_copy(minimax_src / child, minimax_target / child)
+elif all((minimax_target / child).exists() for child in ["vae", "transformer", "scheduler"]):
+    print(f"[minimax] reuse existing weights: {minimax_target}")
+else:
+    print(f"[minimax] download {minimax_repo}")
+    snapshot_download(
+        repo_id=minimax_repo,
+        allow_patterns=["vae/**", "transformer/**", "scheduler/**"],
+        local_dir=str(minimax_target),
+        local_dir_use_symlinks=False,
+        local_files_only=local_files_only,
+    )
 for child in ["vae", "transformer", "scheduler"]:
     if not (minimax_target / child).exists():
         raise SystemExit(f"MiniMax folder missing after download: {minimax_target / child}")
