@@ -163,6 +163,11 @@ def load_qwen(model_path: Path, device_map: str, dtype_name: str, attn_implement
     except Exception:
         kwargs.pop("attn_implementation", None)
         model = model_cls.from_pretrained(model_path, **kwargs)
+    if getattr(model, "generation_config", None) is not None:
+        model.generation_config.do_sample = False
+        model.generation_config.temperature = None
+        model.generation_config.top_p = None
+        model.generation_config.top_k = None
     processor = AutoProcessor.from_pretrained(model_path, use_fast=use_fast_processor)
     return model, processor
 
