@@ -447,8 +447,7 @@ else:
                 repo_work = download_root / f"sd_inpaint_{safe_repo_dir_name(repo_id)}_{sd_inpaint_variant}"
                 print(f"[sd] download {repo_id} ({sd_inpaint_variant}) -> {repo_work}")
                 if repo_work.exists() and sd_health_errors(repo_work):
-                    print(f"[sd][warn] remove invalid partial SD download: {repo_work}")
-                    shutil.rmtree(repo_work)
+                    print(f"[sd][warn] keep partial SD download for resume: {repo_work}")
                 snapshot_download(
                     repo_id=repo_id,
                     allow_patterns=allow_patterns,
