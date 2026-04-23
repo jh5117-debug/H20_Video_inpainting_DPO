@@ -51,7 +51,7 @@ elif [[ ! -f "${ADAPTER_CONFIG}" ]]; then
   cp "${PROJECT_ROOT}/DPO_finetune/configs/multimodel_adapters_h20.example.json" "${ADAPTER_CONFIG}"
 fi
 
-if [[ "${GENERATE_CAPTIONS}" == "1" ]]; then
+if [[ "${GENERATE_CAPTIONS}" == "1" || ( -n "${CAPTION_JSON}" && ! -f "${CAPTION_JSON}" ) ]]; then
   CAPTION_JSON="${CAPTION_JSON:-${PROJECT_ROOT}/DPO_finetune/captions/cococo_qwen_smoke_captions.json}"
   echo "[caption] generating COCOCO prompt JSON: ${CAPTION_JSON}"
   CAPTION_JSON="${CAPTION_JSON}" \
