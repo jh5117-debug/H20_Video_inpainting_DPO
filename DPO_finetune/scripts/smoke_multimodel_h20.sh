@@ -110,7 +110,7 @@ echo "================ PREVIEWS ================"
 find "${SMOKE_ROOT}" -type f \( -name "gt_mask_raw_comp.mp4" -o -name "composited.mp4" -o -name "raw_output.mp4" \) | sort || true
 
 echo
-echo "================ FAILURES / META ================"
+echo "================ LOGS / META ================"
 find "${SMOKE_ROOT}" -type f \( -name "meta.json" -o -name "inference.log" -o -name "generation_summary.json" \) | sort || true
 
 cat <<EOF

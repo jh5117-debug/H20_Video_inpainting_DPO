@@ -60,6 +60,17 @@ else
   echo "[env] skip third-party env creation (set CREATE_THIRD_PARTY_ENVS=1 to enable)"
 fi
 
+if [[ -x "/home/nvme01/miniconda3/bin/conda" && -d "${ENVS_ROOT}/cococo" ]]; then
+  echo "[env] verify COCOCO runtime extras"
+  if ! PYTHONNOUSERSITE=1 /home/nvme01/miniconda3/bin/conda run -p "${ENVS_ROOT}/cococo" python -c "import cv2" >/dev/null 2>&1; then
+    echo "  install cococo extra: opencv-python-headless"
+    PYTHONNOUSERSITE=1 /home/nvme01/miniconda3/bin/conda run -p "${ENVS_ROOT}/cococo" \
+      python -m pip install "opencv-python-headless<4.11"
+  else
+    echo "  cococo extra ok: cv2"
+  fi
+fi
+
 echo "[weights] create weight directories and copy any local known weights"
 mkdir -p "${WEIGHTS_ROOT}/propainter" "${WEIGHTS_ROOT}/cococo" "${WEIGHTS_ROOT}/minimax" "${WEIGHTS_ROOT}/diffueraser" "${WEIGHTS_ROOT}/vbench"
 if [[ -d "${PROJECT_ROOT}/weights/propainter" ]]; then
