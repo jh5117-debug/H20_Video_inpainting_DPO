@@ -20,7 +20,18 @@ DEFAULT_GPUS="0,1,2,3,4,5,6,7"
 export CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-${DEFAULT_GPUS}}"
 export VBENCH_ROOT="${VBENCH_ROOT:-${THIRD_PARTY_ROOT}/repos/VBench}"
 export VBENCH_CACHE_DIR="${VBENCH_CACHE_DIR:-${THIRD_PARTY_ROOT}/weights/vbench_cache}"
-VBENCH_DIMENSIONS="${VBENCH_DIMENSIONS:-subject_consistency,background_consistency,temporal_flickering,motion_smoothness,aesthetic_quality,imaging_quality}"
+VBENCH_DIMENSIONS="${VBENCH_DIMENSIONS:-subject_consistency,background_consistency,temporal_flickering,motion_smoothness,aesthetic_quality}"
+
+remove_vbench_dimension() {
+  local dims="$1"
+  local remove="$2"
+  python - "${dims}" "${remove}" <<'PY'
+import sys
+dims = [d.strip() for d in sys.argv[1].split(",") if d.strip()]
+remove = sys.argv[2]
+print(",".join(d for d in dims if d != remove))
+PY
+}
 
 if [[ "${ENABLE_VBENCH:-0}" == "1" ]]; then
   echo "[run] verify VBench scoring deps in ${DIFFUERASER_ENV}"
@@ -73,6 +84,55 @@ PY
       echo "[run] reuse local VBench aesthetic weight"
       cp "${PROJECT_ROOT}/weights/metrics/sa_0_4_vit_l_14_linear.pth" \
         "${VBENCH_CACHE_DIR}/aesthetic_model/emb_reader/sa_0_4_vit_l_14_linear.pth"
+    fi
+  fi
+
+  if [[ ",${VBENCH_DIMENSIONS}," == *",imaging_quality,"* ]]; then
+    mkdir -p "${VBENCH_CACHE_DIR}/pyiqa_model"
+    if [[ ! -s "${VBENCH_CACHE_DIR}/pyiqa_model/musiq_spaq_ckpt-358bb6af.pth" \
+      && -s "${PROJECT_ROOT}/weights/metrics/musiq_spaq_ckpt-358bb6af.pth" ]]; then
+      echo "[run] reuse local VBench MUSIQ/pyiqa weight"
+      cp "${PROJECT_ROOT}/weights/metrics/musiq_spaq_ckpt-358bb6af.pth" \
+        "${VBENCH_CACHE_DIR}/pyiqa_model/musiq_spaq_ckpt-358bb6af.pth"
+    fi
+    if [[ ! -s "${VBENCH_CACHE_DIR}/pyiqa_model/musiq_spaq_ckpt-358bb6af.pth" \
+      && -n "${VBENCH_PYIQA_HF_REPO:-}" ]]; then
+      echo "[run] download VBench MUSIQ/pyiqa weight from ${VBENCH_PYIQA_HF_REPO}"
+      HF_ENDPOINT="${HF_ENDPOINT:-https://hf-mirror.com}" \
+      HF_HUB_DISABLE_XET="${HF_HUB_DISABLE_XET:-1}" \
+      PYTHONNOUSERSITE=1 conda run --no-capture-output -p "${DIFFUERASER_ENV}" python - <<'PY'
+import os
+import shutil
+from pathlib import Path
+
+from huggingface_hub import hf_hub_download
+
+cache_dir = Path(os.environ["VBENCH_CACHE_DIR"])
+dst = cache_dir / "pyiqa_model" / "musiq_spaq_ckpt-358bb6af.pth"
+dst.parent.mkdir(parents=True, exist_ok=True)
+path = hf_hub_download(
+    repo_id=os.environ["VBENCH_PYIQA_HF_REPO"],
+    filename=os.environ.get("VBENCH_PYIQA_HF_FILENAME", "musiq_spaq_ckpt-358bb6af.pth"),
+    repo_type=os.environ.get("VBENCH_PYIQA_HF_REPO_TYPE", "dataset"),
+    local_dir=str(dst.parent),
+    local_dir_use_symlinks=False,
+)
+src = Path(path)
+if src.resolve() != dst.resolve():
+    shutil.copy2(src, dst)
+if not dst.exists() or dst.stat().st_size <= 0:
+    raise RuntimeError(f"MUSIQ download failed or empty: {dst}")
+print(f"[run] VBench MUSIQ ready: {dst} ({dst.stat().st_size} bytes)")
+PY
+    fi
+    if [[ ! -s "${VBENCH_CACHE_DIR}/pyiqa_model/musiq_spaq_ckpt-358bb6af.pth" ]]; then
+      if [[ "${VBENCH_REQUIRE_IMAGING:-0}" == "1" ]]; then
+        echo "[run][error] imaging_quality requires musiq_spaq_ckpt-358bb6af.pth." >&2
+        echo "[run][error] Put it at ${PROJECT_ROOT}/weights/metrics/musiq_spaq_ckpt-358bb6af.pth or set VBENCH_PYIQA_HF_REPO." >&2
+        exit 1
+      fi
+      echo "[run][warn] skip VBench imaging_quality: missing musiq_spaq_ckpt-358bb6af.pth and GitHub release is unreliable on H20"
+      VBENCH_DIMENSIONS="$(remove_vbench_dimension "${VBENCH_DIMENSIONS}" "imaging_quality")"
     fi
   fi
 fi

@@ -179,6 +179,14 @@ PY
       "${VBENCH_CACHE_DIR}/aesthetic_model/emb_reader/sa_0_4_vit_l_14_linear.pth"
   fi
 
+  if [[ ! -s "${VBENCH_CACHE_DIR}/pyiqa_model/musiq_spaq_ckpt-358bb6af.pth" \
+    && -s "${PROJECT_ROOT}/weights/metrics/musiq_spaq_ckpt-358bb6af.pth" ]]; then
+    echo "[weights] reuse local VBench MUSIQ/pyiqa weight"
+    mkdir -p "${VBENCH_CACHE_DIR}/pyiqa_model"
+    cp "${PROJECT_ROOT}/weights/metrics/musiq_spaq_ckpt-358bb6af.pth" \
+      "${VBENCH_CACHE_DIR}/pyiqa_model/musiq_spaq_ckpt-358bb6af.pth"
+  fi
+
   echo "[weights] try MiniMax-Remover Hugging Face download"
   /home/nvme01/miniconda3/bin/conda run --no-capture-output -p "${DIFFUERASER_ENV}" python -c \
     "from huggingface_hub import snapshot_download; snapshot_download(repo_id='zibojia/minimax-remover', allow_patterns=['vae/**','transformer/**','scheduler/**'], local_dir='${WEIGHTS_ROOT}/minimax')" || true

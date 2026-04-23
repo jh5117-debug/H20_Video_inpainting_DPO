@@ -53,7 +53,7 @@ if str(REPO_ROOT) not in sys.path:
 from inference.metrics import compute_psnr, compute_ssim  # noqa: E402
 
 IMG_EXTS = (".jpg", ".jpeg", ".png", ".bmp", ".webp")
-DEFAULT_VBENCH_DIMS = "subject_consistency,background_consistency,temporal_flickering,motion_smoothness,aesthetic_quality,imaging_quality"
+DEFAULT_VBENCH_DIMS = "subject_consistency,background_consistency,temporal_flickering,motion_smoothness,aesthetic_quality"
 _LPIPS_LOCK = threading.Lock()
 _VBENCH_LOCK = threading.Lock()
 _VBENCH_SCORERS: Dict[Tuple[str, str], Any] = {}

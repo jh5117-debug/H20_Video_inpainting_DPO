@@ -9,7 +9,7 @@ PROJECT_ROOT="${PROJECT_ROOT:-/home/nvme01/H20_Video_inpainting_DPO}"
 TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
 OUT_ROOT="${OUT_ROOT:-${PROJECT_ROOT}/smoke_outputs/DPO_Multimodel_Metric_Check_${TIMESTAMP}}"
 METHODS="${METHODS:-propainter,cococo,diffueraser,minimax}"
-VBENCH_DIMENSIONS="${VBENCH_DIMENSIONS:-subject_consistency,background_consistency,temporal_flickering,motion_smoothness,aesthetic_quality,imaging_quality}"
+VBENCH_DIMENSIONS="${VBENCH_DIMENSIONS:-subject_consistency,background_consistency,temporal_flickering,motion_smoothness,aesthetic_quality}"
 
 cd "${PROJECT_ROOT}"
 
