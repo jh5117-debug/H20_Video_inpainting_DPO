@@ -37,7 +37,7 @@ clone_or_update "https://github.com/Vchitect/VBench.git" "VBench"
 echo "[env] export current DiffuEraser environment manifests"
 if [[ -x "/home/nvme01/miniconda3/bin/conda" ]]; then
   /home/nvme01/miniconda3/bin/conda env export -p "${DIFFUERASER_ENV}" > "${THIRD_PARTY_ROOT}/manifests/diffueraser_h20_env.yml" || true
-  /home/nvme01/miniconda3/bin/conda run -p "${DIFFUERASER_ENV}" python -m pip freeze > "${THIRD_PARTY_ROOT}/manifests/diffueraser_h20_pip_freeze.txt" || true
+  /home/nvme01/miniconda3/bin/conda run --no-capture-output -p "${DIFFUERASER_ENV}" python -m pip freeze > "${THIRD_PARTY_ROOT}/manifests/diffueraser_h20_pip_freeze.txt" || true
 fi
 
 if [[ "${CREATE_THIRD_PARTY_ENVS:-0}" == "1" ]]; then
@@ -50,8 +50,8 @@ if [[ "${CREATE_THIRD_PARTY_ENVS:-0}" == "1" ]]; then
     if [[ ! -d "${env_dir}" && -f "${repo_dir}/requirements.txt" ]]; then
       echo "  create ${env_name}: ${env_dir}"
       /home/nvme01/miniconda3/bin/conda create -p "${env_dir}" python=3.10 -y
-      PYTHONNOUSERSITE=1 /home/nvme01/miniconda3/bin/conda run -p "${env_dir}" python -m pip install -U pip wheel setuptools
-      PYTHONNOUSERSITE=1 /home/nvme01/miniconda3/bin/conda run -p "${env_dir}" python -m pip install -r "${repo_dir}/requirements.txt" || true
+      PYTHONNOUSERSITE=1 /home/nvme01/miniconda3/bin/conda run --no-capture-output -p "${env_dir}" python -m pip install -U pip wheel setuptools
+      PYTHONNOUSERSITE=1 /home/nvme01/miniconda3/bin/conda run --no-capture-output -p "${env_dir}" python -m pip install -r "${repo_dir}/requirements.txt" || true
     else
       echo "  skip ${env_name} (exists or no requirements.txt)"
     fi
@@ -62,10 +62,10 @@ fi
 
 if [[ -x "/home/nvme01/miniconda3/bin/conda" && -d "${ENVS_ROOT}/cococo" ]]; then
   echo "[env] verify COCOCO runtime extras"
-  if ! PYTHONNOUSERSITE=1 /home/nvme01/miniconda3/bin/conda run -p "${ENVS_ROOT}/cococo" \
+  if ! PYTHONNOUSERSITE=1 /home/nvme01/miniconda3/bin/conda run --no-capture-output -p "${ENVS_ROOT}/cococo" \
     python -c "import cv2, numpy, diffusers, transformers, huggingface_hub; assert int(numpy.__version__.split('.')[0]) < 2; assert tuple(map(int, huggingface_hub.__version__.split('.')[:2])) < (0, 26); from diffusers import AutoencoderKL, DDIMScheduler; from diffusers.utils import WEIGHTS_NAME; from transformers import CLIPTextModel, CLIPTokenizer" >/dev/null 2>&1; then
     echo "  install cococo extras: numpy<2 opencv-python-headless compatible diffusers stack"
-    PYTHONNOUSERSITE=1 /home/nvme01/miniconda3/bin/conda run -p "${ENVS_ROOT}/cococo" \
+    PYTHONNOUSERSITE=1 /home/nvme01/miniconda3/bin/conda run --no-capture-output -p "${ENVS_ROOT}/cococo" \
       python -m pip install \
       "numpy<2" \
       "opencv-python-headless<4.11" \
@@ -97,7 +97,7 @@ if [[ -d "${PROJECT_ROOT}/weights/metrics" ]]; then
 fi
 if [[ -x "/home/nvme01/miniconda3/bin/conda" ]]; then
   echo "[weights] try MiniMax-Remover Hugging Face download"
-  /home/nvme01/miniconda3/bin/conda run -p "${DIFFUERASER_ENV}" python -c \
+  /home/nvme01/miniconda3/bin/conda run --no-capture-output -p "${DIFFUERASER_ENV}" python -c \
     "from huggingface_hub import snapshot_download; snapshot_download(repo_id='zibojia/minimax-remover', allow_patterns=['vae/**','transformer/**','scheduler/**'], local_dir='${WEIGHTS_ROOT}/minimax')" || true
 fi
 
