@@ -22,6 +22,7 @@ COCOCO_HF_FILENAME="${COCOCO_HF_FILENAME:-OneDrive_1_2026-4-23.zip}"
 SD_INPAINT_REPO="${SD_INPAINT_REPO:-runwayml/stable-diffusion-inpainting}"
 SD_INPAINT_REPOS="${SD_INPAINT_REPOS:-${SD_INPAINT_REPO},stable-diffusion-v1-5/stable-diffusion-inpainting,genai-archive/stable-diffusion-v1-5-inpainting,benjamin-paine/stable-diffusion-v1-5-inpainting}"
 SD_INPAINT_VARIANT="${SD_INPAINT_VARIANT:-fp16}"
+SD_INPAINT_SEARCH_DIRS="${SD_INPAINT_SEARCH_DIRS:-}"
 MINIMAX_HF_REPO="${MINIMAX_HF_REPO:-zibojia/minimax-remover}"
 COCOCO_LOCAL_ZIP="${COCOCO_LOCAL_ZIP:-}"
 SD_INPAINT_LOCAL_DIR="${SD_INPAINT_LOCAL_DIR:-}"
@@ -68,7 +69,7 @@ fi
 mkdir -p "${WEIGHTS_ROOT}" "${DOWNLOAD_ROOT}"
 export PROJECT_ROOT THIRD_PARTY_ROOT WEIGHTS_ROOT DOWNLOAD_ROOT
 export COCOCO_HF_REPO COCOCO_HF_REPO_TYPE COCOCO_HF_FILENAME SD_INPAINT_REPO SD_INPAINT_REPOS SD_INPAINT_VARIANT MINIMAX_HF_REPO
-export COCOCO_LOCAL_ZIP SD_INPAINT_LOCAL_DIR MINIMAX_LOCAL_DIR HF_LOCAL_FILES_ONLY
+export COCOCO_LOCAL_ZIP SD_INPAINT_LOCAL_DIR SD_INPAINT_SEARCH_DIRS MINIMAX_LOCAL_DIR HF_LOCAL_FILES_ONLY
 export HF_ENDPOINT HF_HUB_DISABLE_XET HF_HUB_DOWNLOAD_TIMEOUT HF_HUB_ETAG_TIMEOUT HF_SNAPSHOT_MAX_WORKERS
 
 echo "[weights] project=${PROJECT_ROOT}"
@@ -79,6 +80,9 @@ echo "[weights] HF_HUB_DISABLE_XET=${HF_HUB_DISABLE_XET}"
 echo "[weights] HF_HUB_DOWNLOAD_TIMEOUT=${HF_HUB_DOWNLOAD_TIMEOUT}"
 echo "[weights] HF_SNAPSHOT_MAX_WORKERS=${HF_SNAPSHOT_MAX_WORKERS}"
 echo "[weights] SD_INPAINT_VARIANT=${SD_INPAINT_VARIANT}"
+if [[ -n "${SD_INPAINT_SEARCH_DIRS}" ]]; then
+  echo "[weights] SD_INPAINT_SEARCH_DIRS=${SD_INPAINT_SEARCH_DIRS}"
+fi
 
 PY_SCRIPT="$(mktemp "${DOWNLOAD_ROOT}/download_multimodel_weights.XXXXXX.py")"
 cleanup() {
@@ -241,9 +245,24 @@ def sd_health_errors(root: Path) -> list:
         errors.append(f"failed to read unet/config.json: {exc}")
 
     weight_options = [
-        [root / "text_encoder" / "pytorch_model.bin", root / "text_encoder" / "model.safetensors"],
-        [root / "vae" / "diffusion_pytorch_model.bin", root / "vae" / "diffusion_pytorch_model.safetensors"],
-        [root / "unet" / "diffusion_pytorch_model.bin", root / "unet" / "diffusion_pytorch_model.safetensors"],
+        [
+            root / "text_encoder" / "pytorch_model.bin",
+            root / "text_encoder" / "model.safetensors",
+            root / "text_encoder" / "pytorch_model.fp16.bin",
+            root / "text_encoder" / "model.fp16.safetensors",
+        ],
+        [
+            root / "vae" / "diffusion_pytorch_model.bin",
+            root / "vae" / "diffusion_pytorch_model.safetensors",
+            root / "vae" / "diffusion_pytorch_model.fp16.bin",
+            root / "vae" / "diffusion_pytorch_model.fp16.safetensors",
+        ],
+        [
+            root / "unet" / "diffusion_pytorch_model.bin",
+            root / "unet" / "diffusion_pytorch_model.safetensors",
+            root / "unet" / "diffusion_pytorch_model.fp16.bin",
+            root / "unet" / "diffusion_pytorch_model.fp16.safetensors",
+        ],
     ]
     for options in weight_options:
         if not any(p.exists() for p in options):
@@ -273,6 +292,53 @@ def publish_sd_root(src: Path, dst: Path) -> None:
     normalize_sd_fp16_names(dst)
 
 
+def hf_cache_name(repo_id: str) -> str:
+    return "models--" + repo_id.replace("/", "--")
+
+
+def candidate_sd_roots(base: Path, repo_ids: list):
+    if not base.exists():
+        return
+    if (base / "model_index.json").exists():
+        yield base
+    if (base / "hub").exists():
+        yield from candidate_sd_roots(base / "hub", repo_ids)
+    for child in base.glob("sd_inpaint_*"):
+        if child.is_dir():
+            if (child / "model_index.json").exists():
+                yield child
+            sd_child = find_sd_root(child)
+            if sd_child is not None:
+                yield sd_child
+    for repo_id in repo_ids:
+        snapshots = base / hf_cache_name(repo_id) / "snapshots"
+        if snapshots.exists():
+            for model_index in snapshots.glob("*/model_index.json"):
+                yield model_index.parent
+
+
+def find_valid_local_sd(repo_ids: list, search_dirs: list) -> Path | None:
+    seen = set()
+    invalid_count = 0
+    for base in search_dirs:
+        for candidate in candidate_sd_roots(base, repo_ids):
+            try:
+                key = candidate.resolve()
+            except Exception:
+                key = candidate
+            if key in seen:
+                continue
+            seen.add(key)
+            errors = sd_health_errors(candidate)
+            if not errors:
+                print(f"[sd] found valid local SD inpainting candidate: {candidate}")
+                return candidate
+            if invalid_count < 6:
+                print(f"[sd][warn] local SD candidate invalid: {candidate}; errors={errors}")
+                invalid_count += 1
+    return None
+
+
 weights_root = Path(os.environ["WEIGHTS_ROOT"])
 download_root = Path(os.environ["DOWNLOAD_ROOT"])
 cococo_repo = os.environ["COCOCO_HF_REPO"]
@@ -284,6 +350,7 @@ sd_inpaint_variant = os.environ.get("SD_INPAINT_VARIANT", "fp16").strip().lower(
 minimax_repo = os.environ["MINIMAX_HF_REPO"]
 cococo_local_zip = os.environ.get("COCOCO_LOCAL_ZIP", "").strip()
 sd_inpaint_local_dir = os.environ.get("SD_INPAINT_LOCAL_DIR", "").strip()
+sd_inpaint_search_dirs_raw = os.environ.get("SD_INPAINT_SEARCH_DIRS", "").strip()
 minimax_local_dir = os.environ.get("MINIMAX_LOCAL_DIR", "").strip()
 local_files_only = os.environ.get("HF_LOCAL_FILES_ONLY", "0") == "1"
 hf_snapshot_max_workers = int(os.environ.get("HF_SNAPSHOT_MAX_WORKERS", "1"))
@@ -295,12 +362,27 @@ cococo_ckpt_dir = cococo_bundle / "cococo"
 sd_target = cococo_bundle / "stable-diffusion-v1-5-inpainting"
 cococo_extract = download_root / "cococo_hf_extract"
 cococo_zip = download_root / cococo_filename
+sd_search_dirs = [download_root]
+for env_name in ["HF_HUB_CACHE", "HF_HOME"]:
+    value = os.environ.get(env_name, "").strip()
+    if value:
+        sd_search_dirs.append(Path(value).expanduser())
+sd_search_dirs.extend([
+    Path.home() / ".cache" / "huggingface" / "hub",
+    Path("/home/ubuntu/.cache/huggingface/hub"),
+    Path("/home/nvme03/ubuntu_home_redirect/.cache/huggingface/hub"),
+])
+for raw_path in sd_inpaint_search_dirs_raw.split(os.pathsep):
+    if raw_path.strip():
+        sd_search_dirs.append(Path(raw_path.strip()).expanduser())
 
 if cococo_local_zip:
     cococo_zip = Path(cococo_local_zip).expanduser().resolve()
     if not cococo_zip.exists():
         raise SystemExit(f"COCOCO_LOCAL_ZIP does not exist: {cococo_zip}")
     print(f"[cococo] use local zip: {cococo_zip}")
+elif cococo_zip.exists():
+    print(f"[cococo] reuse local zip: {cococo_zip}")
 else:
     print(f"[cococo] download {cococo_repo}/{cococo_filename}")
     zip_path = Path(
@@ -353,37 +435,45 @@ else:
         print(f"[sd][warn] existing SD target is invalid and will be rebuilt: {sd_target}")
         for err in sd_health_errors(sd_target):
             print(f"[sd][warn]   {err}")
-    print("[sd] SD inpainting folder not found in zip; try Hugging Face repos")
-    last_error = None
-    allow_patterns, ignore_patterns = sd_patterns(sd_inpaint_variant)
-    for repo_id in sd_repos:
-        try:
-            repo_work = download_root / f"sd_inpaint_{safe_repo_dir_name(repo_id)}_{sd_inpaint_variant}"
-            print(f"[sd] download {repo_id} ({sd_inpaint_variant}) -> {repo_work}")
-            if repo_work.exists() and sd_health_errors(repo_work):
-                print(f"[sd][warn] remove invalid partial SD download: {repo_work}")
-                shutil.rmtree(repo_work)
-            snapshot_download(
-                repo_id=repo_id,
-                allow_patterns=allow_patterns,
-                ignore_patterns=ignore_patterns,
-                local_dir=str(repo_work),
-                local_dir_use_symlinks=False,
-                local_files_only=local_files_only,
-                max_workers=hf_snapshot_max_workers,
-            )
-            normalize_sd_fp16_names(repo_work)
-            errors = sd_health_errors(repo_work)
-            if errors:
-                raise RuntimeError(f"downloaded SD repo is not compatible: {errors}")
-            publish_sd_root(repo_work, sd_target)
-            last_error = None
-            break
-        except Exception as exc:
-            last_error = exc
-            print(f"[sd][warn] failed {repo_id}: {exc}")
-    if last_error is not None:
-        raise last_error
+    local_sd = find_valid_local_sd(sd_repos, sd_search_dirs)
+    if local_sd is not None:
+        publish_sd_root(local_sd, sd_target)
+    else:
+        print("[sd] SD inpainting folder not found in zip/cache; try Hugging Face repos")
+        last_error = None
+        allow_patterns, ignore_patterns = sd_patterns(sd_inpaint_variant)
+        for repo_id in sd_repos:
+            try:
+                repo_work = download_root / f"sd_inpaint_{safe_repo_dir_name(repo_id)}_{sd_inpaint_variant}"
+                print(f"[sd] download {repo_id} ({sd_inpaint_variant}) -> {repo_work}")
+                if repo_work.exists() and sd_health_errors(repo_work):
+                    print(f"[sd][warn] remove invalid partial SD download: {repo_work}")
+                    shutil.rmtree(repo_work)
+                snapshot_download(
+                    repo_id=repo_id,
+                    allow_patterns=allow_patterns,
+                    ignore_patterns=ignore_patterns,
+                    local_dir=str(repo_work),
+                    local_dir_use_symlinks=False,
+                    local_files_only=local_files_only,
+                    max_workers=hf_snapshot_max_workers,
+                )
+                normalize_sd_fp16_names(repo_work)
+                errors = sd_health_errors(repo_work)
+                if errors:
+                    raise RuntimeError(f"downloaded SD repo is not compatible: {errors}")
+                publish_sd_root(repo_work, sd_target)
+                last_error = None
+                break
+            except Exception as exc:
+                last_error = exc
+                print(f"[sd][warn] failed {repo_id}: {exc}")
+        if last_error is not None:
+            local_sd = find_valid_local_sd(sd_repos, sd_search_dirs)
+            if local_sd is not None:
+                publish_sd_root(local_sd, sd_target)
+            else:
+                raise last_error
 sd_errors = sd_health_errors(sd_target)
 if sd_errors:
     raise SystemExit(f"SD inpainting model not ready: {sd_target}; errors={sd_errors}")
