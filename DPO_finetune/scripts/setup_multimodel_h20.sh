@@ -12,6 +12,8 @@ WEIGHTS_ROOT="${THIRD_PARTY_ROOT}/weights"
 ENVS_ROOT="${THIRD_PARTY_ROOT}/envs"
 LOG_ROOT="${THIRD_PARTY_ROOT}/logs"
 DIFFUERASER_ENV="${DIFFUERASER_ENV:-/home/nvme01/conda_envs/diffueraser}"
+COCOCO_TORCH_INDEX_URL="${COCOCO_TORCH_INDEX_URL:-https://download.pytorch.org/whl/cu121}"
+COCOCO_TORCH_PACKAGES="${COCOCO_TORCH_PACKAGES:-torch==2.4.0 torchvision==0.19.0 torchaudio==2.4.0}"
 
 mkdir -p "${REPOS_ROOT}" "${WEIGHTS_ROOT}" "${ENVS_ROOT}" "${LOG_ROOT}" "${THIRD_PARTY_ROOT}/manifests"
 
@@ -81,6 +83,15 @@ if [[ -x "/home/nvme01/miniconda3/bin/conda" && -d "${ENVS_ROOT}/cococo" ]]; the
       "wandb"
   else
     echo "  cococo extras ok: cv2 + numpy<2 + compatible diffusers stack"
+  fi
+  if ! PYTHONNOUSERSITE=1 /home/nvme01/miniconda3/bin/conda run --no-capture-output -p "${ENVS_ROOT}/cococo" \
+    python -c "import torch, torchvision; print(torch.__version__, torchvision.__version__)" >/dev/null 2>&1; then
+    echo "  install cococo torch stack: ${COCOCO_TORCH_PACKAGES}"
+    # shellcheck disable=SC2086
+    PYTHONNOUSERSITE=1 /home/nvme01/miniconda3/bin/conda run --no-capture-output -p "${ENVS_ROOT}/cococo" \
+      python -m pip install --index-url "${COCOCO_TORCH_INDEX_URL}" ${COCOCO_TORCH_PACKAGES}
+  else
+    echo "  cococo torch ok"
   fi
 fi
 
