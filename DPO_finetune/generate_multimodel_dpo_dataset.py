@@ -926,6 +926,7 @@ def select_negatives(
     candidates: List[CandidateResult],
     source_counts: Dict[str, int],
     source_weights: Dict[str, float],
+    source_quality_max_overrides: Dict[str, float],
     quality_min: float,
     quality_max: float,
     quality_target: float,
@@ -949,7 +950,13 @@ def select_negatives(
             "trimmed_extremes": False,
         }
 
-    eligible = [c for c in ok_sorted if quality_min <= c.quality_score <= quality_max]
+    def source_quality_max(cand: CandidateResult) -> float:
+        return source_quality_max_overrides.get(cand.method, quality_max)
+
+    eligible = [
+        c for c in ok_sorted
+        if quality_min <= c.quality_score <= source_quality_max(c)
+    ]
     if len(eligible) < 2:
         eligible_ids = {id(c) for c in eligible}
         outside = [c for c in ok_sorted if id(c) not in eligible_ids]
@@ -957,8 +964,9 @@ def select_negatives(
         def band_distance(cand: CandidateResult) -> float:
             if cand.quality_score < quality_min:
                 return quality_min - cand.quality_score
-            if cand.quality_score > quality_max:
-                return cand.quality_score - quality_max
+            max_allowed = source_quality_max(cand)
+            if cand.quality_score > max_allowed:
+                return cand.quality_score - max_allowed
             return 0.0
 
         outside = sorted(outside, key=lambda c: (band_distance(c), abs(c.quality_score - quality_target)))
@@ -1002,6 +1010,7 @@ def select_negatives(
         "quality_target": quality_target,
         "source_counts_after_selection": dict(source_counts),
         "source_selection_weights": dict(source_weights),
+        "source_quality_max_overrides": dict(source_quality_max_overrides),
         "candidate_quality_order": [
             {"method": c.method, "quality": c.quality_score, "score": c.score}
             for c in ok_sorted
@@ -1216,6 +1225,7 @@ def process_one_video(
             candidate_results,
             source_counts,
             parse_source_weights(args.source_selection_weights),
+            parse_source_weights(args.source_quality_max_overrides),
             args.neg_quality_min,
             args.neg_quality_max,
             args.neg_quality_target,
@@ -1308,6 +1318,7 @@ def build_argparser() -> argparse.ArgumentParser:
     parser.add_argument("--mask_center_jitter_ratio", type=float, default=0.04)
     parser.add_argument("--mask_motion_box_ratio", type=float, default=0.16)
     parser.add_argument("--source_selection_weights", default="propainter=1.5,cococo=1.0,diffueraser=1.0,minimax=1.0")
+    parser.add_argument("--source_quality_max_overrides", default="propainter=0.98")
     parser.add_argument("--neg_quality_min", type=float, default=0.20)
     parser.add_argument("--neg_quality_max", type=float, default=0.80)
     parser.add_argument("--neg_quality_target", type=float, default=0.40)
@@ -1377,6 +1388,7 @@ def main() -> None:
         "neg_selection": {
             "quality_band": [args.neg_quality_min, args.neg_quality_max],
             "quality_target": args.neg_quality_target,
+            "source_quality_max_overrides": parse_source_weights(args.source_quality_max_overrides),
             "vbench_dimensions": parse_csv(args.vbench_dimensions),
             "lpips_enabled": bool(args.enable_lpips),
             "vbench_enabled": bool(args.enable_vbench),

@@ -163,6 +163,7 @@ ARGS=(
   --mask_center_jitter_ratio "${MASK_CENTER_JITTER_RATIO:-0.04}"
   --mask_motion_box_ratio "${MASK_MOTION_BOX_RATIO:-0.16}"
   --source_selection_weights "${SOURCE_SELECTION_WEIGHTS:-propainter=1.5,cococo=1.0,diffueraser=1.0,minimax=1.0}"
+  --source_quality_max_overrides "${SOURCE_QUALITY_MAX_OVERRIDES:-propainter=0.98}"
   --neg_quality_min "${NEG_QUALITY_MIN:-0.20}"
   --neg_quality_max "${NEG_QUALITY_MAX:-0.80}"
   --neg_quality_target "${NEG_QUALITY_TARGET:-0.40}"
