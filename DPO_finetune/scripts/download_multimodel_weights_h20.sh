@@ -19,8 +19,8 @@ DIFFUERASER_ENV="${DIFFUERASER_ENV:-/home/nvme01/conda_envs/diffueraser}"
 COCOCO_HF_REPO="${COCOCO_HF_REPO:-JiaHuang01/COCOCO}"
 COCOCO_HF_REPO_TYPE="${COCOCO_HF_REPO_TYPE:-dataset}"
 COCOCO_HF_FILENAME="${COCOCO_HF_FILENAME:-OneDrive_1_2026-4-23.zip}"
-SD_INPAINT_REPO="${SD_INPAINT_REPO:-stable-diffusion-v1-5/stable-diffusion-inpainting}"
-SD_INPAINT_REPOS="${SD_INPAINT_REPOS:-${SD_INPAINT_REPO},genai-archive/stable-diffusion-v1-5-inpainting,benjamin-paine/stable-diffusion-v1-5-inpainting}"
+SD_INPAINT_REPO="${SD_INPAINT_REPO:-runwayml/stable-diffusion-inpainting}"
+SD_INPAINT_REPOS="${SD_INPAINT_REPOS:-${SD_INPAINT_REPO},stable-diffusion-v1-5/stable-diffusion-inpainting,genai-archive/stable-diffusion-v1-5-inpainting,benjamin-paine/stable-diffusion-v1-5-inpainting}"
 SD_INPAINT_VARIANT="${SD_INPAINT_VARIANT:-fp16}"
 MINIMAX_HF_REPO="${MINIMAX_HF_REPO:-zibojia/minimax-remover}"
 COCOCO_LOCAL_ZIP="${COCOCO_LOCAL_ZIP:-}"
@@ -163,10 +163,13 @@ def sd_patterns(variant: str):
                 "tokenizer/**",
                 "text_encoder/config.json",
                 "text_encoder/*fp16.bin",
+                "text_encoder/*fp16.safetensors",
                 "vae/config.json",
                 "vae/*fp16.bin",
+                "vae/*fp16.safetensors",
                 "unet/config.json",
                 "unet/*fp16.bin",
+                "unet/*fp16.safetensors",
             ],
             ["*.onnx", "*.msgpack"],
         )
@@ -188,9 +191,19 @@ def normalize_sd_fp16_names(root: Path) -> None:
         base_path = fp16_path.with_name(fp16_path.name.replace(".fp16.bin", ".bin"))
         if base_path != fp16_path:
             link_or_copy(fp16_path, base_path)
+    for fp16_path in root.rglob("*.fp16.safetensors"):
+        base_path = fp16_path.with_name(fp16_path.name.replace(".fp16.safetensors", ".safetensors"))
+        if base_path != fp16_path:
+            link_or_copy(fp16_path, base_path)
 
 
-def sd_ready(root: Path) -> bool:
+def read_json(path: Path) -> dict:
+    with path.open("r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def sd_health_errors(root: Path) -> list:
+    errors = []
     required = [
         root / "model_index.json",
         root / "scheduler" / "scheduler_config.json",
@@ -199,14 +212,65 @@ def sd_ready(root: Path) -> bool:
         root / "vae" / "config.json",
         root / "unet" / "config.json",
     ]
-    if not all(p.exists() for p in required):
-        return False
+    missing = [str(p.relative_to(root)) for p in required if not p.exists()]
+    if missing:
+        errors.append(f"missing required files: {missing}")
+        return errors
+
+    try:
+        vae_config = read_json(root / "vae" / "config.json")
+        vae_down_blocks = vae_config.get("down_block_types", [])
+        vae_up_blocks = vae_config.get("up_block_types", [])
+        if any("CrossAttn" in str(x) for x in vae_down_blocks + vae_up_blocks):
+            errors.append("vae/config.json looks like a conditional UNet config, not an AutoencoderKL config")
+        if not any("DownEncoderBlock2D" in str(x) for x in vae_down_blocks):
+            errors.append(f"vae/config.json has suspicious down_block_types={vae_down_blocks}")
+    except Exception as exc:
+        errors.append(f"failed to read vae/config.json: {exc}")
+
+    try:
+        unet_config = read_json(root / "unet" / "config.json")
+        unet_down_blocks = unet_config.get("down_block_types", [])
+        if not any("CrossAttnDownBlock2D" in str(x) for x in unet_down_blocks):
+            errors.append(f"unet/config.json has suspicious down_block_types={unet_down_blocks}")
+        if "cross_attention_dim" not in unet_config:
+            errors.append("unet/config.json missing cross_attention_dim")
+        if int(unet_config.get("in_channels", -1)) != 9:
+            errors.append(f"unet/config.json in_channels={unet_config.get('in_channels')} but inpainting UNet should be 9")
+    except Exception as exc:
+        errors.append(f"failed to read unet/config.json: {exc}")
+
     weight_options = [
         [root / "text_encoder" / "pytorch_model.bin", root / "text_encoder" / "model.safetensors"],
         [root / "vae" / "diffusion_pytorch_model.bin", root / "vae" / "diffusion_pytorch_model.safetensors"],
         [root / "unet" / "diffusion_pytorch_model.bin", root / "unet" / "diffusion_pytorch_model.safetensors"],
     ]
-    return all(any(p.exists() for p in options) for options in weight_options)
+    for options in weight_options:
+        if not any(p.exists() for p in options):
+            errors.append(f"missing weight file; expected one of {[str(p.relative_to(root)) for p in options]}")
+    return errors
+
+
+def sd_ready(root: Path) -> bool:
+    return not sd_health_errors(root)
+
+
+def safe_repo_dir_name(repo_id: str) -> str:
+    return "".join(c if c.isalnum() or c in "._-" else "_" for c in repo_id)
+
+
+def publish_sd_root(src: Path, dst: Path) -> None:
+    if dst.exists() or dst.is_symlink():
+        if dst.is_dir() and not dst.is_symlink():
+            shutil.rmtree(dst)
+        else:
+            dst.unlink()
+    dst.mkdir(parents=True, exist_ok=True)
+    for child in src.iterdir():
+        if child.name == ".cache":
+            continue
+        link_or_copy(child, dst / child.name)
+    normalize_sd_fp16_names(dst)
 
 
 weights_root = Path(os.environ["WEIGHTS_ROOT"])
@@ -275,36 +339,44 @@ print(f"[cococo] checkpoints ready: {cococo_ckpt_dir}")
 sd_src = find_sd_root(cococo_extract)
 if sd_src is not None:
     print(f"[sd] found SD in zip: {sd_src}")
-    sd_target.mkdir(parents=True, exist_ok=True)
-    for child in sd_src.iterdir():
-        link_or_copy(child, sd_target / child.name)
-    normalize_sd_fp16_names(sd_target)
+    publish_sd_root(sd_src, sd_target)
 elif sd_inpaint_local_dir:
     sd_src = Path(sd_inpaint_local_dir).expanduser().resolve()
     if not (sd_src / "model_index.json").exists():
         raise SystemExit(f"SD_INPAINT_LOCAL_DIR is not a diffusers model folder: {sd_src}")
     print(f"[sd] use local SD inpainting dir: {sd_src}")
-    sd_target.mkdir(parents=True, exist_ok=True)
-    for child in sd_src.iterdir():
-        link_or_copy(child, sd_target / child.name)
-    normalize_sd_fp16_names(sd_target)
+    publish_sd_root(sd_src, sd_target)
+elif sd_ready(sd_target):
+    print(f"[sd] reuse existing valid SD inpainting weights: {sd_target}")
 else:
+    if sd_target.exists():
+        print(f"[sd][warn] existing SD target is invalid and will be rebuilt: {sd_target}")
+        for err in sd_health_errors(sd_target):
+            print(f"[sd][warn]   {err}")
     print("[sd] SD inpainting folder not found in zip; try Hugging Face repos")
     last_error = None
     allow_patterns, ignore_patterns = sd_patterns(sd_inpaint_variant)
     for repo_id in sd_repos:
         try:
-            print(f"[sd] download {repo_id} ({sd_inpaint_variant})")
+            repo_work = download_root / f"sd_inpaint_{safe_repo_dir_name(repo_id)}_{sd_inpaint_variant}"
+            print(f"[sd] download {repo_id} ({sd_inpaint_variant}) -> {repo_work}")
+            if repo_work.exists() and sd_health_errors(repo_work):
+                print(f"[sd][warn] remove invalid partial SD download: {repo_work}")
+                shutil.rmtree(repo_work)
             snapshot_download(
                 repo_id=repo_id,
                 allow_patterns=allow_patterns,
                 ignore_patterns=ignore_patterns,
-                local_dir=str(sd_target),
+                local_dir=str(repo_work),
                 local_dir_use_symlinks=False,
                 local_files_only=local_files_only,
                 max_workers=hf_snapshot_max_workers,
             )
-            normalize_sd_fp16_names(sd_target)
+            normalize_sd_fp16_names(repo_work)
+            errors = sd_health_errors(repo_work)
+            if errors:
+                raise RuntimeError(f"downloaded SD repo is not compatible: {errors}")
+            publish_sd_root(repo_work, sd_target)
             last_error = None
             break
         except Exception as exc:
@@ -312,8 +384,9 @@ else:
             print(f"[sd][warn] failed {repo_id}: {exc}")
     if last_error is not None:
         raise last_error
-if not sd_ready(sd_target):
-    raise SystemExit(f"SD inpainting model not ready: {sd_target}")
+sd_errors = sd_health_errors(sd_target)
+if sd_errors:
+    raise SystemExit(f"SD inpainting model not ready: {sd_target}; errors={sd_errors}")
 print(f"[sd] ready: {sd_target}")
 
 minimax_target = weights_root / "minimax"
