@@ -95,6 +95,18 @@ if [[ -x "/home/nvme01/miniconda3/bin/conda" && -d "${ENVS_ROOT}/cococo" ]]; the
   fi
 fi
 
+if [[ -x "/home/nvme01/miniconda3/bin/conda" && -d "${ENVS_ROOT}/minimax" ]]; then
+  echo "[env] verify MiniMax runtime extras"
+  if ! PYTHONNOUSERSITE=1 /home/nvme01/miniconda3/bin/conda run --no-capture-output -p "${ENVS_ROOT}/minimax" \
+    python -c "import typing_extensions" >/dev/null 2>&1; then
+    echo "  install minimax extra: typing_extensions"
+    PYTHONNOUSERSITE=1 /home/nvme01/miniconda3/bin/conda run --no-capture-output -p "${ENVS_ROOT}/minimax" \
+      python -m pip install "typing_extensions>=4.10"
+  else
+    echo "  minimax extras ok: typing_extensions"
+  fi
+fi
+
 echo "[weights] create weight directories and copy any local known weights"
 mkdir -p "${WEIGHTS_ROOT}/propainter" "${WEIGHTS_ROOT}/cococo" "${WEIGHTS_ROOT}/minimax" "${WEIGHTS_ROOT}/diffueraser" "${WEIGHTS_ROOT}/vbench"
 if [[ -d "${PROJECT_ROOT}/weights/propainter" ]]; then

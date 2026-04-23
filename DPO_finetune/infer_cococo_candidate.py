@@ -15,6 +15,7 @@ spend time generating all 10 samples from the release default.
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import re
 import shutil
@@ -152,6 +153,38 @@ def collect_outputs(output_base: Path, output_dir: Path, num_frames: int, width:
         save_rgb(output_dir / f"{idx:05d}.png", arr)
 
 
+def validate_sd_inpainting_root(path: Path) -> None:
+    required = [
+        path / "model_index.json",
+        path / "vae" / "config.json",
+        path / "unet" / "config.json",
+        path / "tokenizer",
+        path / "text_encoder" / "config.json",
+        path / "scheduler" / "scheduler_config.json",
+    ]
+    missing = [str(p.relative_to(path)) for p in required if not p.exists()]
+    if missing:
+        raise FileNotFoundError(f"SD inpainting folder is incomplete: {path}; missing={missing}")
+
+    with (path / "vae" / "config.json").open("r", encoding="utf-8") as f:
+        vae_config = json.load(f)
+    vae_down_blocks = vae_config.get("down_block_types", [])
+    vae_up_blocks = vae_config.get("up_block_types", [])
+    if any("CrossAttn" in str(x) for x in vae_down_blocks + vae_up_blocks):
+        raise RuntimeError(
+            "SD inpainting vae/config.json looks like a conditional UNet config, not AutoencoderKL. "
+            "Rerun DPO_finetune/scripts/download_multimodel_weights_h20.sh with "
+            "SD_INPAINT_HF_REPO=JiaHuang01/COCOCO_SD_INPAINT and SD_INPAINT_HF_FILENAME=stable-diffusion-inpainting.zip."
+        )
+
+    with (path / "unet" / "config.json").open("r", encoding="utf-8") as f:
+        unet_config = json.load(f)
+    if int(unet_config.get("in_channels", -1)) != 9:
+        raise RuntimeError(f"SD inpainting UNet should have in_channels=9, got {unet_config.get('in_channels')}")
+    if "cross_attention_dim" not in unet_config:
+        raise RuntimeError("SD inpainting unet/config.json missing cross_attention_dim")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run COCOCO on one DPO video candidate.")
     parser.add_argument("--repo_dir", required=True)
@@ -180,8 +213,7 @@ def main() -> None:
         ckpt = model_path / f"model_{idx}.pth"
         if not ckpt.exists():
             raise FileNotFoundError(f"missing COCOCO checkpoint: {ckpt}")
-    if not (pretrain_model_path / "model_index.json").exists():
-        raise FileNotFoundError(f"missing SD inpainting model_index.json: {pretrain_model_path}")
+    validate_sd_inpainting_root(pretrain_model_path)
 
     if output_dir.exists():
         shutil.rmtree(output_dir)

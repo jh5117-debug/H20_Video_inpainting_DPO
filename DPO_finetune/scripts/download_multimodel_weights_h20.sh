@@ -436,8 +436,18 @@ print(f"[cococo] checkpoints ready: {cococo_ckpt_dir}")
 
 sd_src = find_sd_root(cococo_extract)
 if sd_src is not None:
-    print(f"[sd] found SD in zip: {sd_src}")
-    publish_sd_root(sd_src, sd_target)
+    sd_src_errors = sd_health_errors(sd_src)
+    if sd_src_errors:
+        print(f"[sd][warn] SD-looking folder in COCOCO zip is invalid and will be ignored: {sd_src}")
+        for err in sd_src_errors:
+            print(f"[sd][warn]   {err}")
+        sd_src = None
+    else:
+        print(f"[sd] found valid SD in zip: {sd_src}")
+        publish_sd_root(sd_src, sd_target)
+
+if sd_src is not None:
+    pass
 elif sd_inpaint_local_dir:
     sd_src = Path(sd_inpaint_local_dir).expanduser().resolve()
     if not (sd_src / "model_index.json").exists():
