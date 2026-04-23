@@ -134,10 +134,10 @@ fi
 if [[ -x "/home/nvme01/miniconda3/bin/conda" ]]; then
   echo "[env] verify DiffuEraser/VBench scoring extras"
   if ! PYTHONNOUSERSITE=1 /home/nvme01/miniconda3/bin/conda run --no-capture-output -p "${DIFFUERASER_ENV}" \
-    python -c "import decord" >/dev/null 2>&1; then
-    echo "  install diffueraser scoring extras: decord"
+    python -c "import decord, omegaconf" >/dev/null 2>&1; then
+    echo "  install diffueraser scoring extras: decord omegaconf"
     PYTHONNOUSERSITE=1 /home/nvme01/miniconda3/bin/conda run --no-capture-output -p "${DIFFUERASER_ENV}" \
-      python -m pip install "decord==0.6.0"
+      python -m pip install "decord==0.6.0" "omegaconf>=2.3.0"
   else
     echo "  diffueraser scoring extras ok"
   fi

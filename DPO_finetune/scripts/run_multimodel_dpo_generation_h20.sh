@@ -36,14 +36,14 @@ PY
 if [[ "${ENABLE_VBENCH:-0}" == "1" ]]; then
   echo "[run] verify VBench scoring deps in ${DIFFUERASER_ENV}"
   if ! PYTHONNOUSERSITE=1 conda run --no-capture-output -p "${DIFFUERASER_ENV}" \
-    python -c "import decord" >/dev/null 2>&1; then
+    python -c "import decord, omegaconf" >/dev/null 2>&1; then
     if [[ "${VBENCH_AUTO_INSTALL_DEPS:-1}" != "1" ]]; then
-      echo "[run][error] VBench requires decord in ${DIFFUERASER_ENV}. Set VBENCH_AUTO_INSTALL_DEPS=1 or install decord." >&2
+      echo "[run][error] VBench requires decord and omegaconf in ${DIFFUERASER_ENV}. Set VBENCH_AUTO_INSTALL_DEPS=1 or install them." >&2
       exit 1
     fi
-    echo "[run] install VBench scoring deps: decord"
+    echo "[run] install VBench scoring deps: decord omegaconf"
     PYTHONNOUSERSITE=1 conda run --no-capture-output -p "${DIFFUERASER_ENV}" \
-      python -m pip install "decord==0.6.0"
+      python -m pip install "decord==0.6.0" "omegaconf>=2.3.0"
   fi
 
   mkdir -p "${VBENCH_CACHE_DIR}"
