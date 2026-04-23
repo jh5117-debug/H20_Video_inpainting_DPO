@@ -8,9 +8,13 @@ set -Eeuo pipefail
 PROJECT_ROOT="${PROJECT_ROOT:-/home/nvme01/H20_Video_inpainting_DPO}"
 DIFFUERASER_ENV="${DIFFUERASER_ENV:-/home/nvme01/conda_envs/diffueraser}"
 ADAPTER_CONFIG="${ADAPTER_CONFIG:-${PROJECT_ROOT}/DPO_finetune/configs/multimodel_adapters_h20.json}"
-SMOKE_ROOT="${SMOKE_ROOT:-/home/nvme03/workspace/world_model_phys/DPO_Multimodel_Smoke_$(date +%Y%m%d_%H%M%S)}"
-METHOD_LIST="${METHODS:-propainter,cococo,minimax}"
+SMOKE_ROOT="${SMOKE_ROOT:-${PROJECT_ROOT}/smoke_outputs/DPO_Multimodel_Smoke_$(date +%Y%m%d_%H%M%S)}"
+METHOD_LIST="${METHODS:-propainter,cococo,diffueraser,minimax}"
 SMOKE_MODE="${SMOKE_MODE:-combined}"
+CAPTION_JSON="${CAPTION_JSON:-}"
+GENERATE_CAPTIONS="${GENERATE_CAPTIONS:-0}"
+CAPTION_GPU="${CAPTION_GPU:-7}"
+DEFAULT_GPUS="0,1,2,3,4,5,6,7"
 
 pick_first_dir() {
   for p in "$@"; do
@@ -47,6 +51,16 @@ elif [[ ! -f "${ADAPTER_CONFIG}" ]]; then
   cp "${PROJECT_ROOT}/DPO_finetune/configs/multimodel_adapters_h20.example.json" "${ADAPTER_CONFIG}"
 fi
 
+if [[ "${GENERATE_CAPTIONS}" == "1" ]]; then
+  CAPTION_JSON="${CAPTION_JSON:-${PROJECT_ROOT}/DPO_finetune/captions/cococo_qwen_smoke_captions.json}"
+  echo "[caption] generating COCOCO prompt JSON: ${CAPTION_JSON}"
+  CAPTION_JSON="${CAPTION_JSON}" \
+  CAPTION_GPU="${CAPTION_GPU}" \
+  CAPTION_NUM_VIDEOS="${NUM_VIDEOS:-2}" \
+  CAPTION_MAX_FRAMES="${MAX_FRAMES:-32}" \
+  bash "${PROJECT_ROOT}/DPO_finetune/scripts/generate_cococo_captions_h20.sh"
+fi
+
 mkdir -p "${SMOKE_ROOT}"
 
 echo "[smoke] project=${PROJECT_ROOT}"
@@ -56,6 +70,9 @@ echo "[smoke] ytbv=${YTBV_ROOT}"
 echo "[smoke] adapters=${ADAPTER_CONFIG}"
 echo "[smoke] methods=${METHOD_LIST}"
 echo "[smoke] mode=${SMOKE_MODE}"
+if [[ -n "${CAPTION_JSON}" ]]; then
+  echo "[smoke] caption_json=${CAPTION_JSON}"
+fi
 
 if [[ "${SMOKE_MODE}" == "combined" ]]; then
   echo
@@ -66,8 +83,9 @@ if [[ "${SMOKE_MODE}" == "combined" ]]; then
   ADAPTER_CONFIG="${ADAPTER_CONFIG}" \
   DAVIS_ROOT="${DAVIS_ROOT}" \
   YTBV_ROOT="${YTBV_ROOT}" \
-  CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-0,1,2,3}" \
-  GPUS="${GPUS:-0,1,2,3}" \
+  CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-${DEFAULT_GPUS}}" \
+  GPUS="${GPUS:-${DEFAULT_GPUS}}" \
+  CAPTION_JSON="${CAPTION_JSON}" \
   METHODS="${METHOD_LIST}" \
   NUM_VIDEOS="${NUM_VIDEOS:-2}" \
   MAX_FRAMES="${MAX_FRAMES:-32}" \
@@ -91,8 +109,9 @@ else
     ADAPTER_CONFIG="${ADAPTER_CONFIG}" \
     DAVIS_ROOT="${DAVIS_ROOT}" \
     YTBV_ROOT="${YTBV_ROOT}" \
-    CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-0,1,2,3}" \
-    GPUS="${GPUS:-0,1,2,3}" \
+    CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-${DEFAULT_GPUS}}" \
+    GPUS="${GPUS:-${DEFAULT_GPUS}}" \
+    CAPTION_JSON="${CAPTION_JSON}" \
     METHODS="${method}" \
     NUM_VIDEOS="${NUM_VIDEOS:-2}" \
     MAX_FRAMES="${MAX_FRAMES:-32}" \

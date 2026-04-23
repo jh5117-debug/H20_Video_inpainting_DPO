@@ -8,7 +8,7 @@ set -Eeuo pipefail
 PROJECT_ROOT="${PROJECT_ROOT:-/home/nvme01/H20_Video_inpainting_DPO}"
 DIFFUERASER_ENV="${DIFFUERASER_ENV:-/home/nvme01/conda_envs/diffueraser}"
 THIRD_PARTY_ROOT="${THIRD_PARTY_ROOT:-${PROJECT_ROOT}/third_party_video_inpainting}"
-OUT_ROOT="${OUT_ROOT:-/home/nvme03/workspace/world_model_phys/DPO_Finetune_Data_Multimodel_v1}"
+OUT_ROOT="${OUT_ROOT:-${PROJECT_ROOT}/DPO_finetune/outputs/DPO_Finetune_Data_Multimodel_v1}"
 YTBV_ROOT="${YTBV_ROOT:-${PROJECT_ROOT}/data/external/ytbv_2019_full_resolution/train/JPEGImages}"
 DAVIS_ROOT="${DAVIS_ROOT:-${PROJECT_ROOT}/data/external/davis_2017_full_resolution/DAVIS/JPEGImages/Full-Resolution}"
 ADAPTER_CONFIG="${ADAPTER_CONFIG:-${PROJECT_ROOT}/DPO_finetune/configs/multimodel_adapters_h20.json}"
@@ -16,7 +16,8 @@ CAPTION_JSON="${CAPTION_JSON:-}"
 
 mkdir -p "${OUT_ROOT}"
 
-export CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-0,1,2,3}"
+DEFAULT_GPUS="0,1,2,3,4,5,6,7"
+export CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-${DEFAULT_GPUS}}"
 export VBENCH_ROOT="${VBENCH_ROOT:-${THIRD_PARTY_ROOT}/repos/VBench}"
 
 ARGS=(
@@ -26,8 +27,8 @@ ARGS=(
   --output_root "${OUT_ROOT}"
   --third_party_root "${THIRD_PARTY_ROOT}"
   --adapter_config "${ADAPTER_CONFIG}"
-  --methods "${METHODS:-propainter,cococo,minimax}"
-  --gpus "${GPUS:-0,1,2,3}"
+  --methods "${METHODS:-propainter,cococo,diffueraser,minimax}"
+  --gpus "${GPUS:-${DEFAULT_GPUS}}"
   --num_videos "${NUM_VIDEOS:-0}"
   --max_frames "${MAX_FRAMES:-48}"
   --height "${HEIGHT:-512}"

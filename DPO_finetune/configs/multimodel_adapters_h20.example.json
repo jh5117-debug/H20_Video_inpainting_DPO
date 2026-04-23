@@ -16,6 +16,15 @@
     "requires_prompt": true,
     "notes": "CoCoCo is text-guided. The wrapper converts frame dirs to images.npy/masks.npy and runs the official release script."
   },
+  "diffueraser": {
+    "enabled": true,
+    "env": "/home/nvme01/conda_envs/diffueraser",
+    "cwd": "/home/nvme01/H20_Video_inpainting_DPO",
+    "cmd": "python DPO_finetune/infer_diffueraser_candidate.py --video_root {batch_video_root} --mask_root {batch_mask_root} --output_dir {raw_output_dir} --work_dir {method_work_dir} --project_root {project_root} --base_model_path {project_root}/weights/stable-diffusion-v1-5 --vae_path {project_root}/weights/sd-vae-ft-mse --diffueraser_path {project_root}/weights/diffuEraser --propainter_model_dir {third_party_root}/weights/propainter --pcm_weights_path {project_root}/weights/PCM_Weights --prompt \"{prompt}\" --num_frames {num_frames} --width {width} --height {height}",
+    "output_glob": "{raw_output_dir}/*.{{png,jpg,jpeg}}",
+    "requires_prompt": false,
+    "notes": "Runs the local DiffuEraser OR pipeline through a wrapper, saving DiffuEraser mp4 output back to lossless frames for DPO scoring."
+  },
   "minimax": {
     "enabled": true,
     "env": "/home/nvme01/H20_Video_inpainting_DPO/third_party_video_inpainting/envs/minimax",
