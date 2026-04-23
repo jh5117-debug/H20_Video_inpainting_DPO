@@ -16,6 +16,9 @@ CAPTION_DTYPE="${CAPTION_DTYPE:-bfloat16}"
 CAPTION_DEVICE_MAP="${CAPTION_DEVICE_MAP:-auto}"
 CAPTION_CREATE_ENV="${CAPTION_CREATE_ENV:-0}"
 CAPTION_INSTALL_DEPS="${CAPTION_INSTALL_DEPS:-0}"
+CAPTION_TRANSFORMERS_SPEC="${CAPTION_TRANSFORMERS_SPEC:-transformers>=4.49.0,<4.58}"
+CAPTION_HF_HUB_SPEC="${CAPTION_HF_HUB_SPEC:-huggingface_hub<1.0}"
+CAPTION_ACCELERATE_SPEC="${CAPTION_ACCELERATE_SPEC:-accelerate>=0.30}"
 FALLBACK_ONLY="${FALLBACK_ONLY:-0}"
 
 pick_first_dir() {
@@ -71,8 +74,23 @@ fi
 
 if [[ "${CAPTION_INSTALL_DEPS}" == "1" ]]; then
   echo "[caption] installing/upgrading Qwen caption dependencies in ${PYTHON_ENV:-current shell python}"
-  "${PYTHON_RUN[@]}" -m pip install -U "transformers>=4.49.0" accelerate "qwen-vl-utils[decord]" pillow
+  "${PYTHON_RUN[@]}" -m pip install -U \
+    "${CAPTION_TRANSFORMERS_SPEC}" \
+    "${CAPTION_HF_HUB_SPEC}" \
+    "${CAPTION_ACCELERATE_SPEC}" \
+    "qwen-vl-utils[decord]" \
+    pillow
 fi
+
+"${PYTHON_RUN[@]}" - <<'PY'
+import importlib.metadata as md
+
+for name in ("torch", "transformers", "huggingface_hub", "accelerate"):
+    try:
+        print(f"[caption] {name}={md.version(name)}")
+    except md.PackageNotFoundError:
+        print(f"[caption] {name}=not-installed")
+PY
 
 ARGS=(
   "${PROJECT_ROOT}/DPO_finetune/generate_cococo_captions_qwen.py"
