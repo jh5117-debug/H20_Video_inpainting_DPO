@@ -22,6 +22,10 @@ clone_or_update() {
   local name="$2"
   local dst="${REPOS_ROOT}/${name}"
   if [[ -d "${dst}/.git" ]]; then
+    if [[ "${SKIP_THIRD_PARTY_REPO_UPDATE:-0}" == "1" ]]; then
+      echo "[repo] skip update ${name} (SKIP_THIRD_PARTY_REPO_UPDATE=1)"
+      return 0
+    fi
     echo "[repo] update ${name}"
     git -C "${dst}" pull --ff-only || true
   else
