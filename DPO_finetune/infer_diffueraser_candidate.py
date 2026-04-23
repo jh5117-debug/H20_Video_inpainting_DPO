@@ -51,6 +51,45 @@ def mp4_to_frames(mp4_path: Path, output_dir: Path, limit: int) -> int:
     return count
 
 
+def is_diffueraser_checkpoint_root(path: Path) -> bool:
+    return (
+        (path / "brushnet" / "config.json").exists()
+        and (path / "unet_main" / "config.json").exists()
+    )
+
+
+def resolve_diffueraser_path(path: Path) -> Path:
+    """Accept either the exact checkpoint root or the parent weights/diffuEraser folder."""
+    path = path.resolve()
+    if is_diffueraser_checkpoint_root(path):
+        return path
+
+    candidates = []
+    for child in path.iterdir() if path.exists() else []:
+        if child.is_dir() and is_diffueraser_checkpoint_root(child):
+            score = 0
+            if child.name.startswith("converted_weights_step"):
+                score = 100
+                try:
+                    score += int(child.name.rsplit("step", 1)[1])
+                except Exception:
+                    pass
+            elif child.name.lower().startswith("orign") or child.name.lower().startswith("origin"):
+                score = 10
+            candidates.append((score, child))
+
+    if candidates:
+        candidates.sort(key=lambda item: item[0], reverse=True)
+        chosen = candidates[0][1].resolve()
+        print(f"[diffueraser] resolved checkpoint root: {chosen}")
+        return chosen
+
+    raise FileNotFoundError(
+        "DiffuEraser checkpoint root must contain brushnet/config.json and "
+        f"unet_main/config.json. Got: {path}"
+    )
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="Run DiffuEraser and save DPO candidate frames.")
     parser.add_argument("--video_root", required=True, help="Batch video root containing one sequence dir.")
@@ -78,6 +117,7 @@ def main() -> None:
     mask_root = Path(args.mask_root).resolve()
     work_dir = Path(args.work_dir).resolve()
     output_dir = Path(args.output_dir).resolve()
+    diffueraser_path = resolve_diffueraser_path(Path(args.diffueraser_path))
     sequence_name = first_sequence_name(video_root, mask_root)
     run_dir = work_dir / "run_or"
     if run_dir.exists():
@@ -108,7 +148,7 @@ def main() -> None:
         "--vae_path",
         str(Path(args.vae_path).resolve()),
         "--diffueraser_path",
-        str(Path(args.diffueraser_path).resolve()),
+        str(diffueraser_path),
         "--propainter_model_dir",
         str(Path(args.propainter_model_dir).resolve()),
         "--pcm_weights_path",

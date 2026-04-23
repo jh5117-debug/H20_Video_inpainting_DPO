@@ -123,8 +123,39 @@ def write_patched_runner(repo_dir: Path, work_dir: Path, num_samples: int) -> Pa
     new = f"for step in range({max(1, num_samples)}):"
     if old not in text:
         raise RuntimeError("could not patch COCOCO sample loop; release script changed")
+    text = text.replace(old, new)
+
+    # Some COCOCO releases build `pretrained_model_path` as
+    # `<sd_root>/<sub_folder>` and then load VAE/tokenizer/scheduler from that
+    # path. That makes AutoencoderKL read the UNet config as VAE config.
+    root_loaders = [
+        'AutoencoderKL.from_pretrained(pretrained_model_path, subfolder="vae")',
+        "AutoencoderKL.from_pretrained(pretrained_model_path, subfolder='vae')",
+        'DDIMScheduler.from_pretrained(pretrained_model_path, subfolder="scheduler")',
+        "DDIMScheduler.from_pretrained(pretrained_model_path, subfolder='scheduler')",
+        'DDPMScheduler.from_pretrained(pretrained_model_path, subfolder="scheduler")',
+        "DDPMScheduler.from_pretrained(pretrained_model_path, subfolder='scheduler')",
+        'CLIPTokenizer.from_pretrained(pretrained_model_path, subfolder="tokenizer")',
+        "CLIPTokenizer.from_pretrained(pretrained_model_path, subfolder='tokenizer')",
+        'CLIPTextModel.from_pretrained(pretrained_model_path, subfolder="text_encoder")',
+        "CLIPTextModel.from_pretrained(pretrained_model_path, subfolder='text_encoder')",
+    ]
+    for expr in root_loaders:
+        text = text.replace(expr, expr.replace("pretrained_model_path", "args.pretrain_model_path"))
+    for cls_name, subfolder in [
+        ("AutoencoderKL", "vae"),
+        ("DDIMScheduler", "scheduler"),
+        ("DDPMScheduler", "scheduler"),
+        ("CLIPTokenizer", "tokenizer"),
+        ("CLIPTextModel", "text_encoder"),
+    ]:
+        text = re.sub(
+            rf"{cls_name}\.from_pretrained\(\s*pretrained_model_path\s*,\s*subfolder=([\"']){subfolder}\1",
+            rf"{cls_name}.from_pretrained(args.pretrain_model_path, subfolder=\1{subfolder}\1",
+            text,
+        )
     patched = work_dir / "valid_code_release_dpo_patched.py"
-    patched.write_text(text.replace(old, new), encoding="utf-8")
+    patched.write_text(text, encoding="utf-8")
     return patched
 
 
@@ -252,8 +283,6 @@ def main() -> None:
         str(model_path),
         "--pretrain_model_path",
         str(pretrain_model_path),
-        "--sub_folder",
-        "unet",
     ]
     subprocess.run(cmd, cwd=str(repo_dir), env=env, check=True)
     collect_outputs(output_base, output_dir, num_frames, args.width, args.height)

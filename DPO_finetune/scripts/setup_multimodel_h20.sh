@@ -98,12 +98,12 @@ fi
 if [[ -x "/home/nvme01/miniconda3/bin/conda" && -d "${ENVS_ROOT}/minimax" ]]; then
   echo "[env] verify MiniMax runtime extras"
   if ! PYTHONNOUSERSITE=1 /home/nvme01/miniconda3/bin/conda run --no-capture-output -p "${ENVS_ROOT}/minimax" \
-    python -c "import typing_extensions" >/dev/null 2>&1; then
-    echo "  install minimax extra: typing_extensions"
+    python -c "import typing_extensions, filelock" >/dev/null 2>&1; then
+    echo "  install minimax extras: typing_extensions filelock"
     PYTHONNOUSERSITE=1 /home/nvme01/miniconda3/bin/conda run --no-capture-output -p "${ENVS_ROOT}/minimax" \
-      python -m pip install "typing_extensions>=4.10"
+      python -m pip install "typing_extensions>=4.10" "filelock>=3.10"
   else
-    echo "  minimax extras ok: typing_extensions"
+    echo "  minimax extras ok: typing_extensions + filelock"
   fi
 fi
 
