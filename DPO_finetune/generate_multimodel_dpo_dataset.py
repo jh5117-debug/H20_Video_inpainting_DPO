@@ -33,6 +33,7 @@ import math
 import os
 import random
 import shutil
+import shlex
 import subprocess
 import sys
 import tempfile
@@ -346,11 +347,16 @@ def build_template_values(
 def run_command(cmd: str, cwd: Optional[Path], env_path: Optional[str], gpu: str, log_path: Path) -> None:
     shell_cmd = cmd
     if env_path:
-        shell_cmd = f"conda run -p {env_path} {cmd}"
+        conda_bin = os.environ.get("CONDA_EXE") or "/home/nvme01/miniconda3/bin/conda"
+        if conda_bin != "conda" and not Path(conda_bin).exists():
+            conda_bin = "conda"
+        shell_cmd = f"{shlex.quote(conda_bin)} run --no-capture-output -p {shlex.quote(env_path)} {cmd}"
 
     env = os.environ.copy()
     env["CUDA_VISIBLE_DEVICES"] = str(gpu)
     env.setdefault("PYTHONUNBUFFERED", "1")
+    if env_path:
+        env["PYTHONNOUSERSITE"] = "1"
 
     log_path.parent.mkdir(parents=True, exist_ok=True)
     with log_path.open("w", encoding="utf-8") as log:

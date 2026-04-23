@@ -119,6 +119,8 @@ def write_patched_runner(repo_dir: Path, work_dir: Path, num_samples: int) -> Pa
     if not src.exists():
         raise FileNotFoundError(f"COCOCO release script not found: {src}")
     text = src.read_text(encoding="utf-8")
+    if not re.search(r"(?m)^import os\b", text):
+        text = "import os\n" + text
     old = "for step in range(10):"
     new = f"for step in range({max(1, num_samples)}):"
     if old not in text:
@@ -152,6 +154,11 @@ def write_patched_runner(repo_dir: Path, work_dir: Path, num_samples: int) -> Pa
         text = re.sub(
             rf"{cls_name}\.from_pretrained\(\s*pretrained_model_path\s*,\s*subfolder=([\"']){subfolder}\1",
             rf"{cls_name}.from_pretrained(args.pretrain_model_path, subfolder=\1{subfolder}\1",
+            text,
+        )
+        text = re.sub(
+            rf"{cls_name}\.from_pretrained\(\s*args\.pretrain_model_path\s*,\s*subfolder=([\"']){subfolder}\1\s*\)",
+            rf"{cls_name}.from_pretrained(os.path.join(args.pretrain_model_path, \1{subfolder}\1))",
             text,
         )
     patched = work_dir / "valid_code_release_dpo_patched.py"
@@ -201,6 +208,11 @@ def validate_sd_inpainting_root(path: Path) -> None:
         vae_config = json.load(f)
     vae_down_blocks = vae_config.get("down_block_types", [])
     vae_up_blocks = vae_config.get("up_block_types", [])
+    print(
+        f"[cococo] sd_root={path}\n"
+        f"[cococo] vae down_block_types={vae_down_blocks} up_block_types={vae_up_blocks}",
+        flush=True,
+    )
     if any("CrossAttn" in str(x) for x in vae_down_blocks + vae_up_blocks):
         raise RuntimeError(
             "SD inpainting vae/config.json looks like a conditional UNet config, not AutoencoderKL. "
@@ -210,6 +222,12 @@ def validate_sd_inpainting_root(path: Path) -> None:
 
     with (path / "unet" / "config.json").open("r", encoding="utf-8") as f:
         unet_config = json.load(f)
+    print(
+        f"[cococo] unet in_channels={unet_config.get('in_channels')} "
+        f"cross_attention_dim={unet_config.get('cross_attention_dim')} "
+        f"down_block_types={unet_config.get('down_block_types')}",
+        flush=True,
+    )
     if int(unet_config.get("in_channels", -1)) != 9:
         raise RuntimeError(f"SD inpainting UNet should have in_channels=9, got {unet_config.get('in_channels')}")
     if "cross_attention_dim" not in unet_config:

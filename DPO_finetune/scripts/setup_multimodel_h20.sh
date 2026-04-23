@@ -98,12 +98,20 @@ fi
 if [[ -x "/home/nvme01/miniconda3/bin/conda" && -d "${ENVS_ROOT}/minimax" ]]; then
   echo "[env] verify MiniMax runtime extras"
   if ! PYTHONNOUSERSITE=1 /home/nvme01/miniconda3/bin/conda run --no-capture-output -p "${ENVS_ROOT}/minimax" \
-    python -c "import typing_extensions, filelock" >/dev/null 2>&1; then
-    echo "  install minimax extras: typing_extensions filelock"
+    python -c "import typing_extensions, filelock, fsspec, tqdm, hf_xet, httpx, imageio, imageio_ffmpeg" >/dev/null 2>&1; then
+    echo "  install minimax extras: typing_extensions filelock fsspec tqdm hf-xet httpx imageio imageio-ffmpeg"
     PYTHONNOUSERSITE=1 /home/nvme01/miniconda3/bin/conda run --no-capture-output -p "${ENVS_ROOT}/minimax" \
-      python -m pip install "typing_extensions>=4.10" "filelock>=3.10"
+      python -m pip install \
+      "typing_extensions>=4.10" \
+      "filelock>=3.10" \
+      "fsspec>=2023.5.0" \
+      "tqdm>=4.42.1" \
+      "hf-xet>=1.1.2" \
+      "httpx>=0.23.0" \
+      "imageio<3,>=2.5" \
+      "imageio-ffmpeg>=0.2.0"
   else
-    echo "  minimax extras ok: typing_extensions + filelock"
+    echo "  minimax extras ok"
   fi
 fi
 
