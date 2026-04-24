@@ -169,11 +169,15 @@ ARGS=(
   --neg_quality_target "${NEG_QUALITY_TARGET:-0.40}"
   --vbench_dimensions "${VBENCH_DIMENSIONS}"
   --parallel_methods "${PARALLEL_METHODS:-4}"
+  --parallel_videos "${PARALLEL_VIDEOS:-1}"
   --resume
 )
 
 if [[ -n "${CAPTION_JSON}" ]]; then
   ARGS+=(--caption_json "${CAPTION_JSON}")
+fi
+if [[ -n "${METHOD_GPU_MAP:-}" ]]; then
+  ARGS+=(--method_gpu_map "${METHOD_GPU_MAP}")
 fi
 if [[ "${ENABLE_LPIPS:-1}" == "1" ]]; then
   ARGS+=(--enable_lpips)

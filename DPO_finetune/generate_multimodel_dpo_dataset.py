@@ -26,6 +26,7 @@ from __future__ import annotations
 
 import argparse
 import concurrent.futures
+import contextlib
 import copy
 import glob
 import json
@@ -93,6 +94,78 @@ class CandidateResult:
 
 def parse_csv(value: str) -> List[str]:
     return [v.strip() for v in value.split(",") if v.strip()]
+
+
+def parse_method_gpu_map(value: str, methods: Sequence[str], fallback_gpus: Sequence[str]) -> Dict[str, List[str]]:
+    if not fallback_gpus:
+        raise ValueError("At least one GPU must be provided.")
+
+    mapping: Dict[str, List[str]] = {}
+    raw_items = value.replace("\n", ";").split(";") if value.strip() else []
+    for raw_item in raw_items:
+        item = raw_item.strip()
+        if not item:
+            continue
+        if "=" not in item:
+            raise ValueError(f"Invalid method_gpu_map item: {item!r}")
+        method, gpu_text = item.split("=", 1)
+        method = method.strip()
+        gpus = parse_csv(gpu_text)
+        if not method or not gpus:
+            raise ValueError(f"Invalid method_gpu_map item: {item!r}")
+        mapping[method] = gpus
+
+    unknown_methods = sorted(set(mapping) - set(methods))
+    if unknown_methods:
+        raise ValueError(f"Unknown methods in method_gpu_map: {unknown_methods}")
+
+    unknown_gpus = sorted({gpu for gpus in mapping.values() for gpu in gpus if gpu not in fallback_gpus})
+    if unknown_gpus:
+        raise ValueError(f"GPUs in method_gpu_map must be part of --gpus; unknown={unknown_gpus}")
+
+    resolved: Dict[str, List[str]] = {}
+    for idx, method in enumerate(methods):
+        resolved[method] = list(mapping.get(method, [fallback_gpus[idx % len(fallback_gpus)]]))
+    return resolved
+
+
+class GpuDispatcher:
+    def __init__(self, method_to_gpus: Dict[str, Sequence[str]]):
+        unique_gpus = sorted({gpu for gpus in method_to_gpus.values() for gpu in gpus})
+        if not unique_gpus:
+            raise ValueError("GpuDispatcher requires at least one GPU.")
+        self.method_to_gpus = {method: list(gpus) for method, gpus in method_to_gpus.items()}
+        self._busy = {gpu: 0 for gpu in unique_gpus}
+        self._cond = threading.Condition()
+
+    @contextlib.contextmanager
+    def lease(self, method: str) -> Iterable[str]:
+        gpu = self.acquire(method)
+        try:
+            yield gpu
+        finally:
+            self.release(gpu)
+
+    def acquire(self, method: str) -> str:
+        allowed = self.method_to_gpus.get(method)
+        if not allowed:
+            raise ValueError(f"No GPU assignment available for method {method!r}")
+
+        with self._cond:
+            while True:
+                free = [gpu for gpu in allowed if self._busy[gpu] == 0]
+                if free:
+                    chosen = free[0]
+                    self._busy[chosen] += 1
+                    return chosen
+                self._cond.wait(timeout=0.5)
+
+    def release(self, gpu: str) -> None:
+        with self._cond:
+            if gpu not in self._busy:
+                return
+            self._busy[gpu] = max(0, self._busy[gpu] - 1)
+            self._cond.notify_all()
 
 
 def parse_source_weights(value: str) -> Dict[str, float]:
@@ -1163,6 +1236,8 @@ def process_one_video(
     adapter_config: Dict[str, Dict[str, Any]],
     captions: Dict[str, str],
     source_counts: Dict[str, int],
+    gpu_dispatcher: GpuDispatcher,
+    selection_lock: threading.Lock,
 ) -> Optional[Tuple[str, Dict[str, Any]]]:
     video_id = f"{video.name}_mask{mask_seed}"
     video_root_dir = Path(args.output_root) / video_id
@@ -1227,29 +1302,28 @@ def process_one_video(
 
     prompt = prompt_for(video, video_id, captions)
     methods = parse_csv(args.methods)
-    gpus = parse_csv(args.gpus)
     candidates_root = video_root_dir / "candidates"
     candidate_results: List[CandidateResult] = []
 
     def _job(idx_method: Tuple[int, str]) -> CandidateResult:
-        idx, method = idx_method
+        _, method = idx_method
         cfg = copy.deepcopy(adapter_config.get(method, {}))
-        gpu = gpus[idx % len(gpus)]
-        print(f"[infer] {video_id} {method} on GPU {gpu}")
-        return run_method(
-            method=method,
-            cfg=cfg,
-            args=args,
-            video_id=video_id,
-            video_root=batch_video_root,
-            mask_root=batch_mask_root,
-            gt_dir=gt_dir,
-            mask_dir=mask_dir,
-            method_root=candidates_root / method,
-            prompt=prompt,
-            gpu=gpu,
-            num_frames=num_frames,
-        )
+        with gpu_dispatcher.lease(method) as gpu:
+            print(f"[infer] {video_id} {method} on GPU {gpu}")
+            return run_method(
+                method=method,
+                cfg=cfg,
+                args=args,
+                video_id=video_id,
+                video_root=batch_video_root,
+                mask_root=batch_mask_root,
+                gt_dir=gt_dir,
+                mask_dir=mask_dir,
+                method_root=candidates_root / method,
+                prompt=prompt,
+                gpu=gpu,
+                num_frames=num_frames,
+            )
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, args.parallel_methods)) as pool:
         for result in pool.map(_job, enumerate(methods)):
@@ -1259,15 +1333,16 @@ def process_one_video(
 
     assign_relative_quality(candidate_results)
     try:
-        neg1, neg2, selection_policy = select_negatives(
-            candidate_results,
-            source_counts,
-            parse_source_weights(args.source_selection_weights),
-            parse_source_weights(args.source_quality_max_overrides),
-            args.neg_quality_min,
-            args.neg_quality_max,
-            args.neg_quality_target,
-        )
+        with selection_lock:
+            neg1, neg2, selection_policy = select_negatives(
+                candidate_results,
+                source_counts,
+                parse_source_weights(args.source_selection_weights),
+                parse_source_weights(args.source_quality_max_overrides),
+                args.neg_quality_min,
+                args.neg_quality_max,
+                args.neg_quality_target,
+            )
     except Exception as exc:
         meta = {
             "video_id": video_id,
@@ -1373,6 +1448,8 @@ def build_argparser() -> argparse.ArgumentParser:
     parser.add_argument("--neg_quality_max", type=float, default=0.80)
     parser.add_argument("--neg_quality_target", type=float, default=0.40)
     parser.add_argument("--parallel_methods", type=int, default=3)
+    parser.add_argument("--parallel_videos", type=int, default=1)
+    parser.add_argument("--method_gpu_map", default="")
     parser.add_argument("--seed", type=int, default=20260422)
     parser.add_argument("--enable_lpips", action="store_true")
     parser.add_argument("--enable_vbench", action="store_true")
@@ -1414,27 +1491,53 @@ def main() -> None:
     else:
         manifest = {}
 
+    methods = parse_csv(args.methods)
+    gpus = parse_csv(args.gpus)
+    method_gpu_map = parse_method_gpu_map(args.method_gpu_map, methods, gpus)
+    print(f"[scheduler] parallel_videos={args.parallel_videos} parallel_methods={args.parallel_methods}")
+    print(f"[scheduler] method_gpu_map={json.dumps(method_gpu_map, ensure_ascii=False)}")
+
     source_counts: Dict[str, int] = {}
+    manifest_lock = threading.Lock()
+    selection_lock = threading.Lock()
+    gpu_dispatcher = GpuDispatcher(method_gpu_map)
+
+    tasks: List[Tuple[VideoItem, int]] = []
     for idx, video in enumerate(videos, 1):
         for local_seed_idx in range(args.mask_seeds_per_video):
             mask_seed = args.seed + idx * 1000 + local_seed_idx
-            processed = process_one_video(
-                video=video,
-                mask_seed=mask_seed,
-                args=args,
-                adapter_config=adapter_config,
-                captions=captions,
-                source_counts=source_counts,
+            tasks.append((video, mask_seed))
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=max(1, args.parallel_videos)) as video_pool:
+        futures = [
+            video_pool.submit(
+                process_one_video,
+                video,
+                mask_seed,
+                args,
+                adapter_config,
+                captions,
+                source_counts,
+                gpu_dispatcher,
+                selection_lock,
             )
+            for video, mask_seed in tasks
+        ]
+        for future in concurrent.futures.as_completed(futures):
+            processed = future.result()
             if processed is None:
                 continue
             video_id, entry = processed
-            manifest[video_id] = entry
-            write_manifest(Path(args.output_root), manifest)
+            with manifest_lock:
+                manifest[video_id] = entry
+                write_manifest(Path(args.output_root), manifest)
 
     summary = {
         "output_root": args.output_root,
         "num_manifest_entries": len(manifest),
+        "parallel_videos": args.parallel_videos,
+        "parallel_methods": args.parallel_methods,
+        "method_gpu_map": method_gpu_map,
         "source_selection_counts": source_counts,
         "source_selection_weights": parse_source_weights(args.source_selection_weights),
         "neg_selection": {
@@ -1458,7 +1561,7 @@ def main() -> None:
             "motion_box_ratio": args.mask_motion_box_ratio,
             "dilation_iter": args.mask_dilation_iter,
         },
-        "methods": parse_csv(args.methods),
+        "methods": methods,
         "candidate_retention": args.candidate_retention,
         "cleanup_failed": bool(args.cleanup_failed),
         "schema": "gt_frames,masks,mask_meta.json,neg_frames_1,neg_frames_2,meta.json",
