@@ -1229,6 +1229,21 @@ def write_manifest(output_root: Path, manifest: Dict[str, Any]) -> None:
     tmp.replace(output_root / "manifest.json")
 
 
+def seed_source_counts_from_existing(output_root: Path) -> Dict[str, int]:
+    counts: Dict[str, int] = {}
+    for meta_path in sorted(output_root.glob("*/meta.json")):
+        try:
+            with meta_path.open("r", encoding="utf-8") as f:
+                meta = json.load(f)
+        except Exception:
+            continue
+        for key in ("selected_neg_frames_1", "selected_neg_frames_2"):
+            method = meta.get(key)
+            if method:
+                counts[method] = counts.get(method, 0) + 1
+    return counts
+
+
 def process_one_video(
     video: VideoItem,
     mask_seed: int,
@@ -1497,7 +1512,9 @@ def main() -> None:
     print(f"[scheduler] parallel_videos={args.parallel_videos} parallel_methods={args.parallel_methods}")
     print(f"[scheduler] method_gpu_map={json.dumps(method_gpu_map, ensure_ascii=False)}")
 
-    source_counts: Dict[str, int] = {}
+    source_counts: Dict[str, int] = seed_source_counts_from_existing(Path(args.output_root)) if args.resume else {}
+    if source_counts:
+        print(f"[resume] seeded source_counts from existing completed items: {json.dumps(source_counts, ensure_ascii=False)}")
     manifest_lock = threading.Lock()
     selection_lock = threading.Lock()
     gpu_dispatcher = GpuDispatcher(method_gpu_map)

@@ -27,6 +27,27 @@ def first_sequence_name(video_root: Path, mask_root: Path) -> str:
     raise RuntimeError(f"no matching frame/mask sequence found under {video_root} and {mask_root}")
 
 
+def pad_sequence_tail(src_dir: Path, dst_dir: Path, target_len: int) -> int:
+    files = image_files(src_dir)
+    if not files:
+        raise RuntimeError(f"no frames found under {src_dir}")
+
+    if dst_dir.exists():
+        shutil.rmtree(dst_dir)
+    dst_dir.mkdir(parents=True, exist_ok=True)
+
+    for idx, src in enumerate(files):
+        shutil.copy2(src, dst_dir / f"{idx:05d}{src.suffix.lower()}")
+
+    if len(files) >= target_len:
+        return len(files)
+
+    last = files[-1]
+    for idx in range(len(files), target_len):
+        shutil.copy2(last, dst_dir / f"{idx:05d}{last.suffix.lower()}")
+    return target_len
+
+
 def mp4_to_frames(mp4_path: Path, output_dir: Path, limit: int) -> int:
     if output_dir.exists():
         shutil.rmtree(output_dir)
@@ -119,6 +140,24 @@ def main() -> None:
     output_dir = Path(args.output_dir).resolve()
     diffueraser_path = resolve_diffueraser_path(Path(args.diffueraser_path))
     sequence_name = first_sequence_name(video_root, mask_root)
+    run_video_root = video_root
+    run_mask_root = mask_root
+    effective_num_frames = args.num_frames
+
+    if 0 < args.num_frames < 23:
+        padded_root = work_dir / "padded_inputs"
+        padded_video_root = padded_root / "videos"
+        padded_mask_root = padded_root / "masks"
+        pad_sequence_tail(video_root / sequence_name, padded_video_root / sequence_name, 23)
+        pad_sequence_tail(mask_root / sequence_name, padded_mask_root / sequence_name, 23)
+        run_video_root = padded_video_root
+        run_mask_root = padded_mask_root
+        effective_num_frames = 23
+        print(
+            f"[diffueraser] padded short clip from {args.num_frames} to "
+            f"{effective_num_frames} frames before OR inference"
+        )
+
     run_dir = work_dir / "run_or"
     if run_dir.exists():
         shutil.rmtree(run_dir)
@@ -130,13 +169,13 @@ def main() -> None:
         "--dataset",
         "custom",
         "--video_root",
-        str(video_root),
+        str(run_video_root),
         "--mask_root",
-        str(mask_root),
+        str(run_mask_root),
         "--save_path",
         str(run_dir),
         "--video_length",
-        str(args.num_frames),
+        str(effective_num_frames),
         "--height",
         str(args.height),
         "--width",
