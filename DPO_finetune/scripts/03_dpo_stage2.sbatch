@@ -9,6 +9,6 @@
 #SBATCH --time=48:00:00
 #SBATCH --output=logs/dpo-stage2-%j.out
 
-export PROJECT_ROOT="${PROJECT_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export PROJECT_ROOT="${PROJECT_ROOT:-${PROJECT_HOME:-$(cd "${SCRIPT_DIR}/../.." && pwd)}}"
 exec bash "${PROJECT_ROOT}/training/dpo/scripts/03_dpo_stage2.sbatch" "$@"
-

@@ -11,7 +11,12 @@
 
 set -euo pipefail
 
-PROJECT_ROOT="${PROJECT_ROOT:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DEFAULT_PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../../.." && pwd)"
+PROJECT_ROOT="${PROJECT_ROOT:-${PROJECT_HOME:-${DEFAULT_PROJECT_ROOT}}}"
+PROJECT_ROOT="$(cd "${PROJECT_ROOT}" && pwd)"
+PROJECT_PARENT="$(dirname "${PROJECT_ROOT}")"
+DEFAULT_CONDA_ENV_PREFIX="${PROJECT_PARENT}/conda_envs/diffueraser"
 
 NUM_GPUS=${NUM_GPUS:-8}
 WEIGHTS_DIR=${WEIGHTS_DIR:-${PROJECT_ROOT}/weights}
@@ -36,9 +41,37 @@ DAVIS_OVERSAMPLE=${DAVIS_OVERSAMPLE:-10}
 EXPERIMENTS_DIR=${EXPERIMENTS_DIR:-${PROJECT_ROOT}/experiments}
 RUN_NAME=${RUN_NAME:-stage1}
 RUN_VERSION=${RUN_VERSION:-}
+WANDB_ENTITY=${WANDB_ENTITY:-}
+SFT_REG_WEIGHT=${SFT_REG_WEIGHT:-0.0}
+CHUNK_ALIGNED=${CHUNK_ALIGNED:-1}
+XFORMERS=${XFORMERS:-0}
+GRADIENT_CHECKPOINTING=${GRADIENT_CHECKPOINTING:-1}
+SPLIT_POS_NEG_FORWARD=${SPLIT_POS_NEG_FORWARD:-1}
+MAIN_PROCESS_PORT=${MAIN_PROCESS_PORT:-0}
 
-source ~/.bashrc
-conda activate diffueraser
+if [[ -n "${CONDA_ENV_PREFIX:-}" ]]; then
+  CONDA_ENV="${CONDA_ENV_PREFIX}"
+elif [[ -z "${CONDA_ENV:-}" && -d "${DEFAULT_CONDA_ENV_PREFIX}" ]]; then
+  CONDA_ENV="${DEFAULT_CONDA_ENV_PREFIX}"
+else
+  CONDA_ENV="${CONDA_ENV:-diffueraser}"
+fi
+
+if [[ -n "${CONDA_BASE:-}" && -x "${CONDA_BASE}/bin/conda" ]]; then
+  :
+elif [[ -n "${CONDA_EXE:-}" ]]; then
+  CONDA_BASE="$("${CONDA_EXE}" info --base)"
+elif command -v conda >/dev/null 2>&1; then
+  CONDA_BASE="$(conda info --base)"
+elif [[ -x "${PROJECT_PARENT}/miniconda3/bin/conda" ]]; then
+  CONDA_BASE="${PROJECT_PARENT}/miniconda3"
+else
+  echo "conda not found; set CONDA_EXE or install Miniconda." >&2
+  exit 1
+fi
+
+source "${CONDA_BASE}/etc/profile.d/conda.sh"
+conda activate "${CONDA_ENV}"
 
 if [[ ! -d "$PROJECT_ROOT" ]]; then
   echo "PROJECT_ROOT does not exist: $PROJECT_ROOT" >&2
@@ -51,10 +84,49 @@ REF_MODEL_ARG=()
 if [[ -n "${REF_MODEL_PATH}" ]]; then
   REF_MODEL_ARG=(--ref_model_path "${REF_MODEL_PATH}")
 fi
+
 RUN_VERSION_ARG=()
 if [[ -n "${RUN_VERSION}" ]]; then
   RUN_VERSION_ARG=(--run_version "${RUN_VERSION}")
 fi
+
+WANDB_ENTITY_ARG=()
+if [[ -n "${WANDB_ENTITY}" ]]; then
+  WANDB_ENTITY_ARG=(--wandb_entity "${WANDB_ENTITY}")
+fi
+
+MAIN_PROCESS_PORT_ARG=()
+if [[ -n "${MAIN_PROCESS_PORT}" && "${MAIN_PROCESS_PORT}" != "0" && "${MAIN_PROCESS_PORT,,}" != "auto" ]]; then
+  MAIN_PROCESS_PORT_ARG=(--main_process_port "${MAIN_PROCESS_PORT}")
+fi
+
+CHUNK_ARG=()
+case "${CHUNK_ALIGNED,,}" in
+  1|true|yes|on)
+    CHUNK_ARG=(--chunk_aligned)
+    ;;
+esac
+
+XFORMERS_ARG=()
+case "${XFORMERS,,}" in
+  1|true|yes|on)
+    XFORMERS_ARG=(--enable_xformers)
+    ;;
+esac
+
+GRADIENT_CHECKPOINTING_ARG=()
+case "${GRADIENT_CHECKPOINTING,,}" in
+  0|false|no|off)
+    GRADIENT_CHECKPOINTING_ARG=(--disable_gradient_checkpointing)
+    ;;
+esac
+
+SPLIT_POS_NEG_FORWARD_ARG=()
+case "${SPLIT_POS_NEG_FORWARD,,}" in
+  1|true|yes|on)
+    SPLIT_POS_NEG_FORWARD_ARG=(--split_pos_neg_forward)
+    ;;
+esac
 
 # === 所有缓存/日志/artifacts 必须在项目目录内，禁止写入 home ===
 export WANDB_DIR="${PROJECT_ROOT}/.wandb_cache"
@@ -69,6 +141,9 @@ if [[ -z "${WANDB_API_KEY:-}" && -f "${HOME}/.netrc" ]]; then
 fi
 export HF_HOME="${PROJECT_ROOT}/.hf_cache"
 export TRANSFORMERS_CACHE="${PROJECT_ROOT}/.hf_cache"
+export TMPDIR="${TMPDIR:-${PROJECT_ROOT}/.tmp}"
+export PYTORCH_CUDA_ALLOC_CONF="${PYTORCH_CUDA_ALLOC_CONF:-expandable_segments:True}"
+export HF_ENDPOINT="${HF_ENDPOINT:-https://hf-mirror.com}"
 mkdir -p "${WANDB_DIR}" "${WANDB_CONFIG_DIR}" "${HF_HOME}"
 
 python training/dpo/scripts/run_stage1.py \
@@ -92,7 +167,13 @@ python training/dpo/scripts/run_stage1.py \
   --mixed_precision ${MIXED_PRECISION} \
   --wandb_project ${WANDB_PROJECT} \
   --beta_dpo ${BETA_DPO} \
+  --sft_reg_weight ${SFT_REG_WEIGHT} \
   --davis_oversample ${DAVIS_OVERSAMPLE} \
-  --chunk_aligned \
+  "${MAIN_PROCESS_PORT_ARG[@]}" \
+  "${WANDB_ENTITY_ARG[@]}" \
+  "${CHUNK_ARG[@]}" \
+  "${XFORMERS_ARG[@]}" \
+  "${GRADIENT_CHECKPOINTING_ARG[@]}" \
+  "${SPLIT_POS_NEG_FORWARD_ARG[@]}" \
   "${REF_MODEL_ARG[@]}" \
   "${RUN_VERSION_ARG[@]}"

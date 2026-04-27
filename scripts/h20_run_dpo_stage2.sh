@@ -159,6 +159,11 @@ case "${SPLIT_POS_NEG_FORWARD,,}" in
     ;;
 esac
 
+WANDB_ENTITY_ARG=()
+if [[ -n "${WANDB_ENTITY:-}" ]]; then
+  WANDB_ENTITY_ARG=(--wandb_entity "${WANDB_ENTITY}")
+fi
+
 python training/dpo/scripts/run_stage2.py \
   --num_gpus "${NUM_GPUS}" \
   --weights_dir "${WEIGHTS_DIR}" \
@@ -181,6 +186,7 @@ python training/dpo/scripts/run_stage2.py \
   --mixed_precision "${MIXED_PRECISION:-bf16}" \
   --main_process_port "${MAIN_PROCESS_PORT}" \
   --wandb_project "${WANDB_PROJECT:-DPO_Diffueraser}" \
+  "${WANDB_ENTITY_ARG[@]}" \
   --beta_dpo "${BETA_DPO:-500.0}" \
   --davis_oversample "${DAVIS_OVERSAMPLE:-10}" \
   "${CHUNK_ARG[@]}" \
