@@ -584,7 +584,12 @@ def log_validation(
         pipeline.enable_xformers_memory_efficient_attention()
 
     generator = None if args.seed is None else torch.Generator(device=accelerator.device).manual_seed(args.seed)
-    inference_ctx = contextlib.nullcontext() if is_final_validation else torch.autocast("cuda")
+    if is_final_validation or args.mixed_precision == "no":
+        inference_ctx = contextlib.nullcontext()
+    elif args.mixed_precision == "bf16":
+        inference_ctx = torch.autocast("cuda", dtype=torch.bfloat16)
+    else:
+        inference_ctx = torch.autocast("cuda", dtype=torch.float16)
 
     val_data_dir = args.val_data_dir
     images_root = os.path.join(val_data_dir, "JPEGImages_432_240")
