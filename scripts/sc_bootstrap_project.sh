@@ -9,7 +9,8 @@ REPO_URL="${REPO_URL:-git@github.com:jh5117-debug/H20_Video_inpainting_DPO.git}"
 REPO_BRANCH="${REPO_BRANCH:-main}"
 
 ARCHIVES_DIR="${ARCHIVES_DIR:-${PROJECT_ROOT}/archives}"
-DATA_EXTERNAL_DIR="${DATA_EXTERNAL_DIR:-${PROJECT_DATA}/external}"
+DPO_DATA_DIR="${DPO_DATA_DIR:-${PROJECT_DATA}/DPO_Finetune_data}"
+VAL_DATA_DIR="${VAL_DATA_DIR:-${PROJECT_DATA}/davis_432_240}"
 WEIGHTS_DIR="${WEIGHTS_DIR:-${PROJECT_ROOT}/weights}"
 EXPERIMENTS_DIR="${EXPERIMENTS_DIR:-${PROJECT_ROOT}/experiments}"
 
@@ -34,7 +35,7 @@ else
   git clone --branch "${REPO_BRANCH}" "${REPO_URL}" "${PROJECT_ROOT}"
 fi
 
-mkdir -p "${ARCHIVES_DIR}" "${DATA_EXTERNAL_DIR}" "${WEIGHTS_DIR}" "${EXPERIMENTS_DIR}"
+mkdir -p "${ARCHIVES_DIR}" "${PROJECT_DATA}" "${WEIGHTS_DIR}" "${EXPERIMENTS_DIR}"
 
 python - <<'PY' "${ARCHIVES_DIR}" "${DATASET_REPO_ID}" "${DATASET_REPO_TYPE}" "${DATASET_FILENAME}" "${ASSETS_REPO_ID}" "${ASSETS_REPO_TYPE}" "${WEIGHTS_ARCHIVE}" "${BASE_DATA_ARCHIVE}"
 import subprocess
@@ -74,13 +75,18 @@ PY
 
 cd "${PROJECT_ROOT}"
 echo "[sc-bootstrap] extracting dataset archive"
-tar -xzf "${ARCHIVES_DIR}/${DATASET_FILENAME}" -C "${DATA_EXTERNAL_DIR}"
+tar -xzf "${ARCHIVES_DIR}/${DATASET_FILENAME}" -C "${PROJECT_DATA}"
 
 echo "[sc-bootstrap] extracting base data archive"
 tar --zstd -xf "${ARCHIVES_DIR}/${BASE_DATA_ARCHIVE}" -C "${PROJECT_ROOT}"
 
 echo "[sc-bootstrap] extracting weights archive"
 tar --zstd -xf "${ARCHIVES_DIR}/${WEIGHTS_ARCHIVE}" -C "${PROJECT_ROOT}"
+
+if [[ ! -d "${VAL_DATA_DIR}" && -d "${PROJECT_DATA}/external/davis_432_240" ]]; then
+  echo "[sc-bootstrap] linking ${VAL_DATA_DIR} -> ${PROJECT_DATA}/external/davis_432_240"
+  ln -sfn "${PROJECT_DATA}/external/davis_432_240" "${VAL_DATA_DIR}"
+fi
 
 ENV_FILE="${PROJECT_ROOT}/env.sc.sh"
 cat > "${ENV_FILE}" <<EOF
@@ -90,8 +96,8 @@ export PROJECT_DEV="${PROJECT_DEV}"
 export PROJECT_ROOT="${PROJECT_ROOT}"
 export PROJECT_DATA="${PROJECT_DATA}"
 export WEIGHTS_DIR="${WEIGHTS_DIR}"
-export DPO_DATA_ROOT="${DATA_EXTERNAL_DIR}/DPO_Finetune_data"
-export VAL_DATA_DIR="${DATA_EXTERNAL_DIR}/davis_432_240"
+export DPO_DATA_ROOT="${DPO_DATA_DIR}"
+export VAL_DATA_DIR="${VAL_DATA_DIR}"
 export EXPERIMENTS_DIR="${EXPERIMENTS_DIR}"
 export WANDB_PROJECT="\${WANDB_PROJECT:-DPO_Diffueraser}"
 export WANDB_ENTITY="\${WANDB_ENTITY:-jh5117-columbia-university}"
@@ -109,5 +115,6 @@ echo "[sc-bootstrap] project_home=${PROJECT_HOME}"
 echo "[sc-bootstrap] project_dev=${PROJECT_DEV}"
 echo "[sc-bootstrap] project_root=${PROJECT_ROOT}"
 echo "[sc-bootstrap] project_data=${PROJECT_DATA}"
-echo "[sc-bootstrap] dataset_root=${DATA_EXTERNAL_DIR}/DPO_Finetune_data"
+echo "[sc-bootstrap] dataset_root=${DPO_DATA_DIR}"
+echo "[sc-bootstrap] val_data_dir=${VAL_DATA_DIR}"
 echo "[sc-bootstrap] weights_dir=${WEIGHTS_DIR}"
