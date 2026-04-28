@@ -15,7 +15,7 @@ Example:
 
     python DPO_finetune/scripts/profile_multimodel_peakmem_h20.py \
       --duration 600 --gpus 4,5,6,7 \
-      --match H20_Video_inpainting_DPO \
+      --match Video_inpainting_DPO \
       --json-out /tmp/multimodel_peakmem.json
 """
 
@@ -132,7 +132,7 @@ def main() -> int:
     parser.add_argument("--gpus", default="", help="Comma-separated GPU indices to include. Empty = all.")
     parser.add_argument(
         "--match",
-        default="H20_Video_inpainting_DPO",
+        default="Video_inpainting_DPO",
         help="Only attribute processes whose cmdline contains this substring. Empty = no filter.",
     )
     parser.add_argument("--json-out", default="", help="Optional JSON summary output path.")

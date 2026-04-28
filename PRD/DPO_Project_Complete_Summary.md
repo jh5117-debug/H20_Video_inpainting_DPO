@@ -401,7 +401,7 @@ except Exception as e:
 本轮实验迁移到 H20 机器运行，代码目录为：
 
 ```bash
-/home/nvme01/H20_Video_inpainting_DPO
+/home/nvme01/Video_inpainting_DPO
 ```
 
 为了避免把大量日志写在代码/权重盘，H20 启动脚本已改为默认将训练日志镜像到：
@@ -425,7 +425,7 @@ except Exception as e:
 模型权重仍保存在原实验目录：
 
 ```bash
-/home/nvme01/H20_Video_inpainting_DPO/experiments/dpo/stage1/<RUN_VERSION>_<RUN_NAME>/
+/home/nvme01/Video_inpainting_DPO/experiments/dpo/stage1/<RUN_VERSION>_<RUN_NAME>/
 ```
 
 ### 6.2 原始 2-GPU vanilla DPO 长训尝试
@@ -445,7 +445,7 @@ except Exception as e:
 本地已保留的一份关键日志：
 
 ```bash
-/home/hj/H20_Video_inpainting_DPO/Diffueraser_DPO_Log/h20_dpo_stage1_p77ehlz2_20260422_000137/h20_dpo_stage1_original_data_2gpu_gpu01_split_20260421_150838.log
+/home/hj/Video_inpainting_DPO/Diffueraser_DPO_Log/h20_dpo_stage1_p77ehlz2_20260422_000137/h20_dpo_stage1_original_data_2gpu_gpu01_split_20260421_150838.log
 ```
 
 该日志显示，训练从第 300 步开始已经进入非常明显的不健康状态：
@@ -535,7 +535,7 @@ DistNetworkError: timed out while trying to connect to (127.0.0.1, 0)
 | `SPLIT_POS_NEG_FORWARD` | `0` |
 | W&B run | `https://wandb.ai/WorldModel_11/DPO_Diffueraser/runs/zh4qk7px` |
 | H20 log | `/home/nvme03/workspace/world_model_phys/Diffueraser_DPO_Log/20260421_224309_h20-dpo-stage1-probe-beta50-600step-gpu4567-nosplit/train_stdout.log` |
-| Last weights | `/home/nvme01/H20_Video_inpainting_DPO/experiments/dpo/stage1/20260421_224309_h20-dpo-stage1-probe-beta50-600step-gpu4567-nosplit/last_weights` |
+| Last weights | `/home/nvme01/Video_inpainting_DPO/experiments/dpo/stage1/20260421_224309_h20-dpo-stage1-probe-beta50-600step-gpu4567-nosplit/last_weights` |
 
 Step 600 诊断表：
 

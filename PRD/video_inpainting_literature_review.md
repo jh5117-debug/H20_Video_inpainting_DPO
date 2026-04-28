@@ -1,6 +1,6 @@
 # Video Inpainting 文献综述 & DiffuEraser-DPO 技术对标分析
 
-> 基于 8 篇核心论文的深度阅读，面向 `H20_Video_inpainting_DPO` 仓库的训练策略决策。
+> 基于 8 篇核心论文的深度阅读，面向 `Video_inpainting_DPO` 仓库的训练策略决策。
 
 ---
 

@@ -6,10 +6,10 @@ Example:
     python DPO_finetune/scripts/monitor_multimodel_runtime_h20.py \
       --duration 3600 \
       --interval 2 \
-      --output-root /home/nvme01/H20_Video_inpainting_DPO/DPO_Finetune_Data_Multimodel_v1 \
-      --log-path /home/nvme01/H20_Video_inpainting_DPO/DPO_Finetune_Data_Multimodel_v1.repair_short_diffueraser.stdout.log \
+      --output-root /home/nvme01/Video_inpainting_DPO/DPO_Finetune_Data_Multimodel_v1 \
+      --log-path /home/nvme01/Video_inpainting_DPO/DPO_Finetune_Data_Multimodel_v1.repair_short_diffueraser.stdout.log \
       --gpus 4,5,6,7 \
-      --match H20_Video_inpainting_DPO \
+      --match Video_inpainting_DPO \
       --json-out /tmp/h20_multimodel_monitor.json
 """
 
@@ -225,7 +225,7 @@ def main() -> int:
     parser.add_argument("--duration", type=float, default=3600.0)
     parser.add_argument("--interval", type=float, default=2.0)
     parser.add_argument("--gpus", default="4,5,6,7")
-    parser.add_argument("--match", default="H20_Video_inpainting_DPO")
+    parser.add_argument("--match", default="Video_inpainting_DPO")
     parser.add_argument("--json-out", default="")
     args = parser.parse_args()
 

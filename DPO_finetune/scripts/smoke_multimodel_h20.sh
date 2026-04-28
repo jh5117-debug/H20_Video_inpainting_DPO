@@ -5,7 +5,8 @@ set -Eeuo pipefail
 # This is for checking whether each model's real output video is sane before
 # spending time on the full dataset.
 
-PROJECT_ROOT="${PROJECT_ROOT:-/home/nvme01/H20_Video_inpainting_DPO}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="${PROJECT_ROOT:-$(cd "${SCRIPT_DIR}/../.." && pwd)}"
 DIFFUERASER_ENV="${DIFFUERASER_ENV:-/home/nvme01/conda_envs/diffueraser}"
 ADAPTER_CONFIG="${ADAPTER_CONFIG:-${PROJECT_ROOT}/DPO_finetune/configs/multimodel_adapters_h20.json}"
 SMOKE_ROOT="${SMOKE_ROOT:-${PROJECT_ROOT}/smoke_outputs/DPO_Multimodel_Smoke_$(date +%Y%m%d_%H%M%S)}"

@@ -12,7 +12,7 @@
 ## 1. H20 上准备第三方代码、环境、权重目录
 
 ```bash
-cd /home/nvme01/H20_Video_inpainting_DPO
+cd /home/nvme01/Video_inpainting_DPO
 git pull --ff-only origin main
 
 bash DPO_finetune/scripts/setup_multimodel_h20.sh
@@ -26,7 +26,7 @@ bash DPO_finetune/scripts/setup_multimodel_h20.sh
   - `https://github.com/zibojia/MiniMax-Remover.git`
   - `https://github.com/lixiaowen-xw/DiffuEraser.git`
   - `https://github.com/Vchitect/VBench.git`
-- 在 `/home/nvme01/H20_Video_inpainting_DPO/third_party_video_inpainting` 下建立：
+- 在 `/home/nvme01/Video_inpainting_DPO/third_party_video_inpainting` 下建立：
   - `repos/`
   - `weights/`
   - `envs/`
@@ -43,7 +43,7 @@ bash DPO_finetune/scripts/download_multimodel_weights_h20.sh
 该脚本会把权重整理到同一个根目录：
 
 ```text
-/home/nvme01/H20_Video_inpainting_DPO/third_party_video_inpainting/weights/
+/home/nvme01/Video_inpainting_DPO/third_party_video_inpainting/weights/
 ├── COCOCO_weight/
 │   ├── cococo/model_0.pth ... model_3.pth
 │   └── stable-diffusion-v1-5-inpainting/
@@ -54,13 +54,13 @@ bash DPO_finetune/scripts/download_multimodel_weights_h20.sh
 脚本还会生成：
 
 ```bash
-/home/nvme01/H20_Video_inpainting_DPO/third_party_video_inpainting/WEIGHTS_TODO.md
+/home/nvme01/Video_inpainting_DPO/third_party_video_inpainting/WEIGHTS_TODO.md
 ```
 
 ## 2. 准备 adapter 配置
 
 ```bash
-cd /home/nvme01/H20_Video_inpainting_DPO
+cd /home/nvme01/Video_inpainting_DPO
 
 cp DPO_finetune/configs/multimodel_adapters_h20.example.json \
    DPO_finetune/configs/multimodel_adapters_h20.json
@@ -105,7 +105,7 @@ bash DPO_finetune/scripts/run_multimodel_dpo_generation_h20.sh
 默认使用 GPU `0,1,2,3`，输出到 `/home/nvme03/workspace/world_model_phys/DPO_Finetune_Data_Multimodel_v1`：
 
 ```bash
-cd /home/nvme01/H20_Video_inpainting_DPO
+cd /home/nvme01/Video_inpainting_DPO
 
 CUDA_VISIBLE_DEVICES=0,1,2,3 \
 GPUS=0,1,2,3 \
@@ -193,7 +193,7 @@ DPO_Finetune_Data_Multimodel_v1/
 生成完成后，训练仍然使用现有脚本，只改数据根目录：
 
 ```bash
-cd /home/nvme01/H20_Video_inpainting_DPO
+cd /home/nvme01/Video_inpainting_DPO
 
 DPO_DATA_ROOT=/home/nvme03/workspace/world_model_phys/DPO_Finetune_Data_Multimodel_v1 \
 CUDA_VISIBLE_DEVICES=1,2,3 \

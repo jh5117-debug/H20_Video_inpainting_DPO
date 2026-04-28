@@ -19,7 +19,7 @@ VLM Captioning Script for OR Scene (独立环境运行)
         --model_path /path/to/Qwen2.5-VL-7B-Instruct
 
     # 批量处理整个 DAVIS 数据集:
-    export PROJECT_HOME=/path/to/H20_Video_inpainting_DPO
+    export PROJECT_HOME=/path/to/Video_inpainting_DPO
     CUDA_VISIBLE_DEVICES=1 python generate_captions_BR.py \
         --dataset_root "${PROJECT_HOME}/data/external/davis_2017_full_resolution/DAVIS" \
         --model_path "${PROJECT_HOME}/weights/Qwen2.5-VL-7B-Instruct" \

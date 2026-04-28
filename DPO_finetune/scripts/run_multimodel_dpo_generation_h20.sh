@@ -5,16 +5,25 @@ set -Eeuo pipefail
 # It keeps the training-side schema unchanged:
 #   manifest.json + {video}/gt_frames,masks,neg_frames_1,neg_frames_2,meta.json
 
-PROJECT_ROOT="${PROJECT_ROOT:-/home/nvme01/H20_Video_inpainting_DPO}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+DEFAULT_PROJECT_ROOT="$(cd "${SCRIPT_DIR}/../.." && pwd)"
+PROJECT_NAME="${PROJECT_NAME:-Video_inpainting_DPO}"
+DATA_NAME="${DATA_NAME:-Video_inpainting_DPO}"
+PROJECT_ROOT="${PROJECT_ROOT:-${DEFAULT_PROJECT_ROOT}}"
 DIFFUERASER_ENV="${DIFFUERASER_ENV:-/home/nvme01/conda_envs/diffueraser}"
-THIRD_PARTY_ROOT="${THIRD_PARTY_ROOT:-${PROJECT_ROOT}/third_party_video_inpainting}"
-OUT_ROOT="${OUT_ROOT:-${PROJECT_ROOT}/DPO_finetune/outputs/DPO_Finetune_Data_Multimodel_v1}"
-YTBV_ROOT="${YTBV_ROOT:-${PROJECT_ROOT}/data/external/ytbv_2019_full_resolution/train/JPEGImages}"
-DAVIS_ROOT="${DAVIS_ROOT:-${PROJECT_ROOT}/data/external/davis_2017_full_resolution/DAVIS/JPEGImages/Full-Resolution}"
+DATA="${DATA:-${PROJECT_ROOT}/data}"
+THIRD_PARTY_ROOT="${THIRD_PARTY_ROOT:-${DATA}/third_party_video_inpainting}"
+OUT_ROOT="${OUT_ROOT:-${DATA}/DPO_Finetune_Data_Multimodel_v1}"
+YTBV_ROOT="${YTBV_ROOT:-${DATA}/external/ytbv_2019_full_resolution/train/JPEGImages}"
+DAVIS_ROOT="${DAVIS_ROOT:-${DATA}/external/davis_2017_full_resolution/DAVIS/JPEGImages/Full-Resolution}"
 ADAPTER_CONFIG="${ADAPTER_CONFIG:-${PROJECT_ROOT}/DPO_finetune/configs/multimodel_adapters_h20.json}"
 CAPTION_JSON="${CAPTION_JSON:-}"
 
 mkdir -p "${OUT_ROOT}"
+if [[ ! -f "${ADAPTER_CONFIG}" && -f "${PROJECT_ROOT}/DPO_finetune/configs/multimodel_adapters_h20.example.json" ]]; then
+  echo "[run] adapter config missing; copying example to ${ADAPTER_CONFIG}"
+  cp "${PROJECT_ROOT}/DPO_finetune/configs/multimodel_adapters_h20.example.json" "${ADAPTER_CONFIG}"
+fi
 
 DEFAULT_GPUS="0,1,2,3,4,5,6,7"
 export CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-${DEFAULT_GPUS}}"
@@ -144,6 +153,7 @@ ARGS=(
   --output_root "${OUT_ROOT}"
   --third_party_root "${THIRD_PARTY_ROOT}"
   --adapter_config "${ADAPTER_CONFIG}"
+  --diffueraser_env "${DIFFUERASER_ENV}"
   --methods "${METHODS:-propainter,cococo,diffueraser,minimax}"
   --gpus "${GPUS:-${DEFAULT_GPUS}}"
   --num_videos "${NUM_VIDEOS:-0}"
@@ -153,10 +163,10 @@ ARGS=(
   --train_nframes "${TRAIN_NFRAMES:-16}"
   --score_windows "${SCORE_WINDOWS:-32,24,16}"
   --mask_seeds_per_video "${MASK_SEEDS_PER_VIDEO:-1}"
-  --mask_dilation_iter "${MASK_DILATION_ITER:-8}"
-  --mask_area_min "${MASK_AREA_MIN:-0.35}"
-  --mask_area_max "${MASK_AREA_MAX:-0.45}"
-  --mask_margin_ratio "${MASK_MARGIN_RATIO:-0.15}"
+  --mask_dilation_iter "${MASK_DILATION_ITER:-0}"
+  --mask_area_min "${MASK_AREA_MIN:-0.20}"
+  --mask_area_max "${MASK_AREA_MAX:-0.30}"
+  --mask_margin_ratio "${MASK_MARGIN_RATIO:-0.10}"
   --mask_static_prob "${MASK_STATIC_PROB:-0.50}"
   --mask_speed_min "${MASK_SPEED_MIN:-0.50}"
   --mask_speed_max "${MASK_SPEED_MAX:-1.50}"
@@ -164,12 +174,13 @@ ARGS=(
   --mask_motion_box_ratio "${MASK_MOTION_BOX_RATIO:-0.16}"
   --source_selection_weights "${SOURCE_SELECTION_WEIGHTS:-propainter=1.5,cococo=1.0,diffueraser=1.0,minimax=1.0}"
   --source_quality_max_overrides "${SOURCE_QUALITY_MAX_OVERRIDES:-propainter=0.98}"
-  --neg_quality_min "${NEG_QUALITY_MIN:-0.20}"
-  --neg_quality_max "${NEG_QUALITY_MAX:-0.80}"
-  --neg_quality_target "${NEG_QUALITY_TARGET:-0.40}"
+  --neg_quality_min "${NEG_QUALITY_MIN:-0.30}"
+  --neg_quality_max "${NEG_QUALITY_MAX:-0.65}"
+  --neg_quality_target "${NEG_QUALITY_TARGET:-0.45}"
   --vbench_dimensions "${VBENCH_DIMENSIONS}"
   --parallel_methods "${PARALLEL_METHODS:-4}"
   --parallel_videos "${PARALLEL_VIDEOS:-1}"
+  --gpu_slots "${GPU_SLOTS:-1}"
   --resume
 )
 

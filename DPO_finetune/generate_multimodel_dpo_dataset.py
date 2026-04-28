@@ -130,11 +130,12 @@ def parse_method_gpu_map(value: str, methods: Sequence[str], fallback_gpus: Sequ
 
 
 class GpuDispatcher:
-    def __init__(self, method_to_gpus: Dict[str, Sequence[str]]):
+    def __init__(self, method_to_gpus: Dict[str, Sequence[str]], gpu_slots: Optional[Dict[str, int]] = None):
         unique_gpus = sorted({gpu for gpus in method_to_gpus.values() for gpu in gpus})
         if not unique_gpus:
             raise ValueError("GpuDispatcher requires at least one GPU.")
         self.method_to_gpus = {method: list(gpus) for method, gpus in method_to_gpus.items()}
+        self._capacity = {gpu: max(1, int((gpu_slots or {}).get(gpu, 1))) for gpu in unique_gpus}
         self._busy = {gpu: 0 for gpu in unique_gpus}
         self._cond = threading.Condition()
 
@@ -153,9 +154,9 @@ class GpuDispatcher:
 
         with self._cond:
             while True:
-                free = [gpu for gpu in allowed if self._busy[gpu] == 0]
+                free = [gpu for gpu in allowed if self._busy[gpu] < self._capacity.get(gpu, 1)]
                 if free:
-                    chosen = free[0]
+                    chosen = sorted(free, key=lambda g: (self._busy[g], g))[0]
                     self._busy[chosen] += 1
                     return chosen
                 self._cond.wait(timeout=0.5)
@@ -179,6 +180,32 @@ def parse_source_weights(value: str) -> Dict[str, float]:
         except ValueError:
             continue
     return weights
+
+
+def parse_gpu_slots(value: str, gpus: Sequence[str]) -> Dict[str, int]:
+    if not gpus:
+        raise ValueError("parse_gpu_slots requires at least one GPU.")
+    text = str(value).strip()
+    if not text:
+        return {gpu: 1 for gpu in gpus}
+    if text.isdigit():
+        slots = max(1, int(text))
+        return {gpu: slots for gpu in gpus}
+
+    slots_by_gpu = {gpu: 1 for gpu in gpus}
+    raw_items = text.replace("\n", ";").replace(",", ";").split(";")
+    for raw_item in raw_items:
+        item = raw_item.strip()
+        if not item:
+            continue
+        if "=" not in item:
+            raise ValueError(f"Invalid gpu_slots item: {item!r}; use '2' or '0=2;1=2'.")
+        gpu, raw_slots = item.split("=", 1)
+        gpu = gpu.strip()
+        if gpu not in slots_by_gpu:
+            raise ValueError(f"GPU in gpu_slots must be part of --gpus; unknown={gpu!r}")
+        slots_by_gpu[gpu] = max(1, int(raw_slots.strip()))
+    return slots_by_gpu
 
 
 def image_files(path: Path) -> List[Path]:
@@ -619,6 +646,7 @@ def build_template_values(
     return {
         "project_root": Path(args.project_root),
         "third_party_root": Path(args.third_party_root),
+        "diffueraser_env": args.diffueraser_env,
         "video_id": video_id,
         "method": method,
         "batch_video_root": video_root,
@@ -1256,7 +1284,14 @@ def process_one_video(
 ) -> Optional[Tuple[str, Dict[str, Any]]]:
     video_id = f"{video.name}_mask{mask_seed}"
     video_root_dir = Path(args.output_root) / video_id
-    if args.resume and (video_root_dir / "meta.json").exists() and (video_root_dir / "neg_frames_1").is_dir() and (video_root_dir / "neg_frames_2").is_dir():
+    complete_on_disk = (
+        (video_root_dir / "meta.json").exists()
+        and (video_root_dir / "gt_frames").is_dir()
+        and (video_root_dir / "masks").is_dir()
+        and (video_root_dir / "neg_frames_1").is_dir()
+        and (video_root_dir / "neg_frames_2").is_dir()
+    )
+    if args.resume and complete_on_disk:
         print(f"[skip] {video_id} already complete")
         with (video_root_dir / "meta.json").open("r", encoding="utf-8") as f:
             meta = json.load(f)
@@ -1273,6 +1308,10 @@ def process_one_video(
             "neg_1_source": meta.get("selected_neg_frames_1"),
             "neg_2_source": meta.get("selected_neg_frames_2"),
         }
+
+    if args.resume and video_root_dir.exists() and not complete_on_disk:
+        print(f"[resume] {video_id} is incomplete; removing partial directory and regenerating")
+        shutil.rmtree(video_root_dir, ignore_errors=True)
 
     if video_root_dir.exists() and not args.resume:
         shutil.rmtree(video_root_dir)
@@ -1438,6 +1477,7 @@ def build_argparser() -> argparse.ArgumentParser:
     parser.add_argument("--output_root", required=True)
     parser.add_argument("--third_party_root", required=True)
     parser.add_argument("--adapter_config", required=True)
+    parser.add_argument("--diffueraser_env", default=os.environ.get("DIFFUERASER_ENV", "/home/nvme01/conda_envs/diffueraser"))
     parser.add_argument("--methods", default="propainter,cococo,diffueraser,minimax")
     parser.add_argument("--gpus", default="0,1,2,3,4,5,6,7")
     parser.add_argument("--caption_json", default=None)
@@ -1448,10 +1488,10 @@ def build_argparser() -> argparse.ArgumentParser:
     parser.add_argument("--train_nframes", type=int, default=16)
     parser.add_argument("--score_windows", default="32,24,16")
     parser.add_argument("--mask_seeds_per_video", type=int, default=1)
-    parser.add_argument("--mask_dilation_iter", type=int, default=8)
-    parser.add_argument("--mask_area_min", type=float, default=0.35)
-    parser.add_argument("--mask_area_max", type=float, default=0.45)
-    parser.add_argument("--mask_margin_ratio", type=float, default=0.15)
+    parser.add_argument("--mask_dilation_iter", type=int, default=0)
+    parser.add_argument("--mask_area_min", type=float, default=0.20)
+    parser.add_argument("--mask_area_max", type=float, default=0.30)
+    parser.add_argument("--mask_margin_ratio", type=float, default=0.10)
     parser.add_argument("--mask_static_prob", type=float, default=0.50)
     parser.add_argument("--mask_speed_min", type=float, default=0.50)
     parser.add_argument("--mask_speed_max", type=float, default=1.50)
@@ -1459,12 +1499,13 @@ def build_argparser() -> argparse.ArgumentParser:
     parser.add_argument("--mask_motion_box_ratio", type=float, default=0.16)
     parser.add_argument("--source_selection_weights", default="propainter=1.5,cococo=1.0,diffueraser=1.0,minimax=1.0")
     parser.add_argument("--source_quality_max_overrides", default="propainter=0.98")
-    parser.add_argument("--neg_quality_min", type=float, default=0.20)
-    parser.add_argument("--neg_quality_max", type=float, default=0.80)
-    parser.add_argument("--neg_quality_target", type=float, default=0.40)
+    parser.add_argument("--neg_quality_min", type=float, default=0.30)
+    parser.add_argument("--neg_quality_max", type=float, default=0.65)
+    parser.add_argument("--neg_quality_target", type=float, default=0.45)
     parser.add_argument("--parallel_methods", type=int, default=3)
     parser.add_argument("--parallel_videos", type=int, default=1)
     parser.add_argument("--method_gpu_map", default="")
+    parser.add_argument("--gpu_slots", default="1", help="Per-GPU concurrent leases. Use '2' or '0=2;1=1'.")
     parser.add_argument("--seed", type=int, default=20260422)
     parser.add_argument("--enable_lpips", action="store_true")
     parser.add_argument("--enable_vbench", action="store_true")
@@ -1509,15 +1550,17 @@ def main() -> None:
     methods = parse_csv(args.methods)
     gpus = parse_csv(args.gpus)
     method_gpu_map = parse_method_gpu_map(args.method_gpu_map, methods, gpus)
+    gpu_slots = parse_gpu_slots(args.gpu_slots, gpus)
     print(f"[scheduler] parallel_videos={args.parallel_videos} parallel_methods={args.parallel_methods}")
     print(f"[scheduler] method_gpu_map={json.dumps(method_gpu_map, ensure_ascii=False)}")
+    print(f"[scheduler] gpu_slots={json.dumps(gpu_slots, ensure_ascii=False)}")
 
     source_counts: Dict[str, int] = seed_source_counts_from_existing(Path(args.output_root)) if args.resume else {}
     if source_counts:
         print(f"[resume] seeded source_counts from existing completed items: {json.dumps(source_counts, ensure_ascii=False)}")
     manifest_lock = threading.Lock()
     selection_lock = threading.Lock()
-    gpu_dispatcher = GpuDispatcher(method_gpu_map)
+    gpu_dispatcher = GpuDispatcher(method_gpu_map, gpu_slots=gpu_slots)
 
     tasks: List[Tuple[VideoItem, int]] = []
     for idx, video in enumerate(videos, 1):
@@ -1555,6 +1598,7 @@ def main() -> None:
         "parallel_videos": args.parallel_videos,
         "parallel_methods": args.parallel_methods,
         "method_gpu_map": method_gpu_map,
+        "gpu_slots": gpu_slots,
         "source_selection_counts": source_counts,
         "source_selection_weights": parse_source_weights(args.source_selection_weights),
         "neg_selection": {

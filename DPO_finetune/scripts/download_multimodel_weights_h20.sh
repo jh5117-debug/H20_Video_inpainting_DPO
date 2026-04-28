@@ -10,7 +10,8 @@ set -Eeuo pipefail
 #     minimax/{vae,transformer,scheduler}
 #     propainter/{ProPainter.pth,raft-things.pth,recurrent_flow_completion.pth}
 
-PROJECT_ROOT="${PROJECT_ROOT:-/home/nvme01/H20_Video_inpainting_DPO}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="${PROJECT_ROOT:-$(cd "${SCRIPT_DIR}/../.." && pwd)}"
 THIRD_PARTY_ROOT="${THIRD_PARTY_ROOT:-${PROJECT_ROOT}/third_party_video_inpainting}"
 WEIGHTS_ROOT="${WEIGHTS_ROOT:-${THIRD_PARTY_ROOT}/weights}"
 DOWNLOAD_ROOT="${DOWNLOAD_ROOT:-${THIRD_PARTY_ROOT}/downloads}"

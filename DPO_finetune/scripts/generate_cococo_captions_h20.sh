@@ -3,7 +3,8 @@ set -Eeuo pipefail
 
 # Generate a caption JSON for COCOCO prompts with a local Qwen2.5-VL model.
 
-PROJECT_ROOT="${PROJECT_ROOT:-/home/nvme01/H20_Video_inpainting_DPO}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="${PROJECT_ROOT:-$(cd "${SCRIPT_DIR}/../.." && pwd)}"
 DIFFUERASER_ENV="${DIFFUERASER_ENV:-/home/nvme01/conda_envs/diffueraser}"
 CAPTION_ENV="${CAPTION_ENV:-${PROJECT_ROOT}/third_party_video_inpainting/envs/qwen_caption}"
 CAPTION_MODEL="${CAPTION_MODEL:-${PROJECT_ROOT}/weights/Qwen2.5-VL-7B-Instruct}"

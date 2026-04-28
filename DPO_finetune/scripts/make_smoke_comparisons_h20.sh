@@ -4,7 +4,8 @@ set -Eeuo pipefail
 # Build GT+mask+four-model comparison videos from H20 smoke outputs.
 # If SMOKE_ROOTS is empty, all DPO_Multimodel_Smoke_* roots are scanned.
 
-PROJECT_ROOT="${PROJECT_ROOT:-/home/nvme01/H20_Video_inpainting_DPO}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="${PROJECT_ROOT:-$(cd "${SCRIPT_DIR}/../.." && pwd)}"
 DIFFUERASER_ENV="${DIFFUERASER_ENV:-/home/nvme01/conda_envs/diffueraser}"
 SMOKE_OUTPUTS_DIR="${SMOKE_OUTPUTS_DIR:-${PROJECT_ROOT}/smoke_outputs}"
 OUTPUT_DIR="${OUTPUT_DIR:-${SMOKE_OUTPUTS_DIR}/five_panel_smoke_comparisons_$(date +%Y%m%d_%H%M%S)}"

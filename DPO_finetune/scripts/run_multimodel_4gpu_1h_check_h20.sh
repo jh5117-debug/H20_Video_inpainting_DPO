@@ -4,7 +4,8 @@ set -Eeuo pipefail
 # Restart multimodel DPO data generation on GPUs 4-7 only, then run a
 # 1-hour runtime monitor and print a compact health summary.
 
-PROJECT_ROOT="${PROJECT_ROOT:-/home/nvme01/H20_Video_inpainting_DPO}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="${PROJECT_ROOT:-$(cd "${SCRIPT_DIR}/../.." && pwd)}"
 OUT_ROOT="${OUT_ROOT:-${PROJECT_ROOT}/DPO_Finetune_Data_Multimodel_v1}"
 RUNTIME_SEC="${RUNTIME_SEC:-3600}"
 MONITOR_INTERVAL="${MONITOR_INTERVAL:-2}"
@@ -85,7 +86,7 @@ python "${PROJECT_ROOT}/DPO_finetune/scripts/monitor_multimodel_runtime_h20.py" 
   --output-root "${OUT_ROOT}" \
   --log-path "${LOG_PATH}" \
   --gpus "${GPUS}" \
-  --match H20_Video_inpainting_DPO \
+  --match Video_inpainting_DPO \
   --json-out "${MONITOR_JSON}" | tee "${MONITOR_TXT}"
 
 echo

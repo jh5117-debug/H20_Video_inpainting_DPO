@@ -1,4 +1,4 @@
-# H20 Video Inpainting DPO
+# Video Inpainting DPO
 
 DiffuEraser video inpainting finetuning project with two isolated training tracks:
 
@@ -8,7 +8,7 @@ DiffuEraser video inpainting finetuning project with two isolated training track
 ## Directory Layout
 
 ```text
-H20_Video_inpainting_DPO/
+Video_inpainting_DPO/
 ├── training/
 │   ├── sft/                    # SFT Stage 1/2 training implementation
 │   ├── dpo/                    # DPO Stage 1/2 training + DPO dataset
@@ -73,18 +73,18 @@ python DPO_finetune/scripts/run_dpo_stage2.py --chunk_aligned
 Single-node server, no SLURM:
 
 ```bash
-export PROJECT_HOME=/home/nvme01/H20_Video_inpainting_DPO
+export PROJECT_HOME=/home/nvme01/Video_inpainting_DPO
 cd "${PROJECT_HOME}"
-CUDA_VISIBLE_DEVICES=4,5,6,7 bash scripts/h20_run_dpo_stage1.sh
-CUDA_VISIBLE_DEVICES=4,5,6,7 bash scripts/h20_run_dpo_stage2.sh
+CUDA_VISIBLE_DEVICES=4,5,6,7 python DPO_finetune/scripts/run_dpo_stage1.py --chunk_aligned
+CUDA_VISIBLE_DEVICES=4,5,6,7 python DPO_finetune/scripts/run_dpo_stage2.py --chunk_aligned
 ```
 
-For H20 stability, these launchers default to `MIXED_PRECISION=bf16` and
-`XFORMERS=0`. You can override them per run:
+For single-node stability, use `MIXED_PRECISION=bf16` and disable xFormers unless
+the runtime stack has already been verified. You can override settings per run:
 
 ```bash
 MIXED_PRECISION=fp16 XFORMERS=1 CUDA_VISIBLE_DEVICES=4,5,6,7 \
-  bash scripts/h20_run_dpo_stage1.sh
+  python DPO_finetune/scripts/run_dpo_stage1.py --chunk_aligned
 ```
 
 The launchers infer `PROJECT_ROOT` from their location by default. For another
@@ -92,7 +92,7 @@ server, set `PROJECT_HOME` to that checkout and optionally override asset/env
 locations:
 
 ```bash
-export PROJECT_HOME=/path/to/H20_Video_inpainting_DPO
+export PROJECT_HOME=/path/to/Video_inpainting_DPO
 export CONDA_BASE=/path/to/miniconda3
 export CONDA_ENV_PREFIX=/path/to/conda_envs/diffueraser
 export WEIGHTS_DIR="${PROJECT_HOME}/weights"

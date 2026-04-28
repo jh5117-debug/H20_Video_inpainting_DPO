@@ -1,4 +1,4 @@
-# H20_Video_inpainting_DPO 代码结构审查（重构后 v2）
+# Video_inpainting_DPO 代码结构审查（重构后 v2）
 
 > 基于 2026-04-18 04:24 代码快照
 
@@ -121,7 +121,7 @@ DPO Stage2 加载:
 
 ## 🔍 DPO Loss 审查
 
-[training/dpo/train_stage1.py](file:///home/hj/H20_Video_inpainting_DPO/training/dpo/train_stage1.py#L238-L322) 中的 `compute_dpo_loss` 实现正确：
+[training/dpo/train_stage1.py](file:///home/hj/Video_inpainting_DPO/training/dpo/train_stage1.py#L238-L322) 中的 `compute_dpo_loss` 实现正确：
 
 ```python
 # 核心公式
@@ -143,7 +143,7 @@ loss = (-1.0 * F.logsigmoid(inside_term)).mean()      # DPO loss
 ## 📂 当前文件拓扑
 
 ```
-H20_Video_inpainting_DPO/
+Video_inpainting_DPO/
 │
 ├── training/                          ← 🆕 核心训练模块
 │   ├── common/

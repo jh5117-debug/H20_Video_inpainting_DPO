@@ -5,7 +5,8 @@ set -Eeuo pipefail
 # It fails fast if any model candidate is missing metrics or if the dataset
 # schema is not directly trainable.
 
-PROJECT_ROOT="${PROJECT_ROOT:-/home/nvme01/H20_Video_inpainting_DPO}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="${PROJECT_ROOT:-$(cd "${SCRIPT_DIR}/../.." && pwd)}"
 TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
 OUT_ROOT="${OUT_ROOT:-${PROJECT_ROOT}/smoke_outputs/DPO_Multimodel_Metric_Check_${TIMESTAMP}}"
 METHODS="${METHODS:-propainter,cococo,diffueraser,minimax}"

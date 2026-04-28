@@ -1,16 +1,16 @@
 {
   "propainter": {
     "enabled": true,
-    "env": "/home/nvme01/conda_envs/diffueraser",
-    "cwd": "/home/nvme01/H20_Video_inpainting_DPO",
+    "env": "{diffueraser_env}",
+    "cwd": "{project_root}",
     "cmd": "python DPO_finetune/infer_propainter_candidate.py --video_dir {input_dir} --mask_dir {mask_dir} --output_dir {raw_output_dir} --model_dir {third_party_root}/weights/propainter --num_frames {num_frames} --width {width} --height {height}",
     "output_glob": "{raw_output_dir}/*.{{png,jpg,jpeg}}",
     "notes": "Uses the local Propainter wrapper with return_frames=True, so it saves lossless frames instead of reading back compressed mp4."
   },
   "cococo": {
     "enabled": true,
-    "env": "/home/nvme01/H20_Video_inpainting_DPO/third_party_video_inpainting/envs/cococo",
-    "cwd": "/home/nvme01/H20_Video_inpainting_DPO",
+    "env": "{third_party_root}/envs/cococo",
+    "cwd": "{project_root}",
     "cmd": "python DPO_finetune/infer_cococo_candidate.py --repo_dir {third_party_root}/repos/COCOCO --video_dir {input_dir} --mask_dir {mask_dir} --output_dir {raw_output_dir} --work_dir {method_work_dir} --model_path {third_party_root}/weights/COCOCO_weight/cococo --pretrain_model_path {third_party_root}/weights/COCOCO_weight/stable-diffusion-v1-5-inpainting --prompt \"{prompt}\" --negative_prompt \"worst quality. bad quality.\" --guidance_scale 10 --num_samples 1 --num_frames {num_frames} --width {width} --height {height}",
     "output_glob": "{raw_output_dir}/*.{{png,jpg,jpeg}}",
     "requires_prompt": true,
@@ -18,8 +18,8 @@
   },
   "diffueraser": {
     "enabled": true,
-    "env": "/home/nvme01/conda_envs/diffueraser",
-    "cwd": "/home/nvme01/H20_Video_inpainting_DPO",
+    "env": "{diffueraser_env}",
+    "cwd": "{project_root}",
     "cmd": "python DPO_finetune/infer_diffueraser_candidate.py --video_root {batch_video_root} --mask_root {batch_mask_root} --output_dir {raw_output_dir} --work_dir {method_work_dir} --project_root {project_root} --base_model_path {project_root}/weights/stable-diffusion-v1-5 --vae_path {project_root}/weights/sd-vae-ft-mse --diffueraser_path {project_root}/weights/diffuEraser --propainter_model_dir {third_party_root}/weights/propainter --pcm_weights_path {project_root}/weights/PCM_Weights --prompt \"{prompt}\" --num_frames {num_frames} --width {width} --height {height}",
     "output_glob": "{raw_output_dir}/*.{{png,jpg,jpeg}}",
     "requires_prompt": false,
@@ -27,8 +27,8 @@
   },
   "minimax": {
     "enabled": true,
-    "env": "/home/nvme01/H20_Video_inpainting_DPO/third_party_video_inpainting/envs/minimax",
-    "cwd": "/home/nvme01/H20_Video_inpainting_DPO",
+    "env": "{third_party_root}/envs/minimax",
+    "cwd": "{project_root}",
     "cmd": "python DPO_finetune/infer_minimax_candidate.py --repo_dir {third_party_root}/repos/MiniMax-Remover --video_dir {input_dir} --mask_dir {mask_dir} --output_dir {raw_output_dir} --model_dir {third_party_root}/weights/minimax --num_frames {num_frames} --width {width} --height {height} --num_inference_steps 12 --iterations 6",
     "output_glob": "{raw_output_dir}/*.{{png,jpg,jpeg}}",
     "notes": "Uses official MiniMax-Remover modules. It pads to a 4k+1 temporal length internally and crops back to the requested frame count."

@@ -89,13 +89,13 @@ aggregates completed `summary.json` files into an experiment report.
 The H20 server uses the full project under:
 
 ```text
-/home/nvme01/H20_Video_inpainting_DPO
+/home/nvme01/Video_inpainting_DPO
 ```
 
 It does not require SLURM. DPO training should use the plain shell launchers:
 
 ```bash
-cd /home/nvme01/H20_Video_inpainting_DPO
+cd /home/nvme01/Video_inpainting_DPO
 CUDA_VISIBLE_DEVICES=4,5,6,7 bash scripts/h20_run_dpo_stage1.sh
 CUDA_VISIBLE_DEVICES=4,5,6,7 bash scripts/h20_run_dpo_stage2.sh
 ```

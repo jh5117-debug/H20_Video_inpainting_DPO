@@ -5,7 +5,8 @@ set -Eeuo pipefail
 # weight directories on the H20 machine. This script is intentionally
 # idempotent: running it again updates repos and reprints missing pieces.
 
-PROJECT_ROOT="${PROJECT_ROOT:-/home/nvme01/H20_Video_inpainting_DPO}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="${PROJECT_ROOT:-$(cd "${SCRIPT_DIR}/../.." && pwd)}"
 THIRD_PARTY_ROOT="${THIRD_PARTY_ROOT:-${PROJECT_ROOT}/third_party_video_inpainting}"
 REPOS_ROOT="${THIRD_PARTY_ROOT}/repos"
 WEIGHTS_ROOT="${THIRD_PARTY_ROOT}/weights"

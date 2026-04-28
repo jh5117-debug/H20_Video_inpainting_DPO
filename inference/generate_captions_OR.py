@@ -27,7 +27,7 @@ VLM Captioning Script for OR (Object Removal) Scene
         --model_path /path/to/Qwen2.5-VL-7B-Instruct
 
     # 批量处理 DAVIS 数据集
-    export PROJECT_HOME=/path/to/H20_Video_inpainting_DPO
+    export PROJECT_HOME=/path/to/Video_inpainting_DPO
     CUDA_VISIBLE_DEVICES=0 python generate_captions_OR.py \
         --dataset_root "${PROJECT_HOME}/data/external/davis_2017_full_resolution/DAVIS" \
         --model_path "${PROJECT_HOME}/weights/Qwen2.5-VL-7B-Instruct" \
