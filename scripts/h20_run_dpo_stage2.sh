@@ -181,6 +181,9 @@ python training/dpo/scripts/run_stage2.py \
   --checkpointing_steps "${CKPT_STEPS:-2000}" \
   --checkpoints_total_limit "${CKPT_LIMIT:-3}" \
   --validation_steps "${VAL_STEPS:-2000}" \
+  --val_num_inference_steps "${VAL_NUM_INFERENCE_STEPS:-6}" \
+  --val_mask_dilation_iter "${VAL_MASK_DILATION_ITER:-0}" \
+  --resolution "${RESOLUTION:-512}" \
   --nframes "${NFRAMES:-16}" \
   --seed "${SEED:-42}" \
   --mixed_precision "${MIXED_PRECISION:-bf16}" \

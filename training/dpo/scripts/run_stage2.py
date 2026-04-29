@@ -87,7 +87,7 @@ def build_cmd(project_root, args):
         "--output_dir", str(output_dir),
         "--logging_dir", "logs-dpo-stage2",
         "--val_data_dir", eval_dir,
-        "--resolution", "512",
+        "--resolution", str(args.resolution),
         "--nframes", str(args.nframes),
         "--train_batch_size", str(args.batch_size),
         "--gradient_accumulation_steps", str(args.gradient_accumulation_steps),
@@ -97,6 +97,8 @@ def build_cmd(project_root, args):
         "--max_train_steps", str(args.max_train_steps),
         "--checkpointing_steps", str(args.checkpointing_steps),
         "--validation_steps", str(args.validation_steps),
+        "--val_num_inference_steps", str(args.val_num_inference_steps),
+        "--val_mask_dilation_iter", str(args.val_mask_dilation_iter),
         "--beta_dpo", str(args.beta_dpo),
         "--davis_oversample", str(args.davis_oversample),
         "--seed", str(args.seed),
@@ -147,6 +149,7 @@ def build_cmd(project_root, args):
         },
         params={
             "nframes": args.nframes,
+            "resolution": args.resolution,
             "max_train_steps": args.max_train_steps,
             "learning_rate": args.learning_rate,
             "batch_size": args.batch_size,
@@ -326,6 +329,9 @@ def parse_args():
     parser.add_argument("--checkpointing_steps", type=int, default=2000)
     parser.add_argument("--checkpoints_total_limit", type=int, default=3)
     parser.add_argument("--validation_steps", type=int, default=2000)
+    parser.add_argument("--val_num_inference_steps", type=int, default=6)
+    parser.add_argument("--val_mask_dilation_iter", type=int, default=0)
+    parser.add_argument("--resolution", type=int, default=512)
     parser.add_argument("--nframes", type=int, default=16)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--mixed_precision", type=str, default="fp16")

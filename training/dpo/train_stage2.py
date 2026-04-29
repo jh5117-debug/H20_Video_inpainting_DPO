@@ -220,7 +220,12 @@ def log_validation(
             mask = Image.open(mask_path).convert('L')
             mask = np.asarray(mask)
             m = np.array(mask > 0).astype(np.uint8)
-            m = cv2.dilate(m, cv2.getStructuringElement(cv2.MORPH_CROSS, (3, 3)), iterations=4)
+            if args.val_mask_dilation_iter > 0:
+                m = cv2.dilate(
+                    m,
+                    cv2.getStructuringElement(cv2.MORPH_CROSS, (3, 3)),
+                    iterations=args.val_mask_dilation_iter,
+                )
             mask = Image.fromarray(m * 255)
             masks.append(mask)
 
@@ -237,7 +242,7 @@ def log_validation(
                     images = pipeline(
                         num_frames=args.nframes, prompt="clean background",
                         images=masked_images, masks=masks,
-                        num_inference_steps=50, generator=generator,
+                        num_inference_steps=args.val_num_inference_steps, generator=generator,
                         guidance_scale=0.0,
                     ).frames
         except Exception as e:
@@ -417,6 +422,8 @@ def parse_args(input_args=None):
     parser.add_argument("--validation_mask", type=str, default=["data/external/davis_432_240/test_masks/bear"])
     parser.add_argument("--val_data_dir", type=str, default="data/external/davis_432_240")
     parser.add_argument("--validation_steps", type=int, default=300)
+    parser.add_argument("--val_num_inference_steps", type=int, default=6)
+    parser.add_argument("--val_mask_dilation_iter", type=int, default=0)
     parser.add_argument("--logging_steps", type=int, default=300,
                         help="每隔多少步输出详细 DPO 诊断日志")
 

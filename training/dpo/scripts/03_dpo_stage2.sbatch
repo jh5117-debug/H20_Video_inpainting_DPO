@@ -48,6 +48,9 @@ MAX_STEPS=${MAX_STEPS:-30000}
 CKPT_STEPS=${CKPT_STEPS:-2000}
 CKPT_LIMIT=${CKPT_LIMIT:-1}
 VAL_STEPS=${VAL_STEPS:-2000}
+VAL_NUM_INFERENCE_STEPS=${VAL_NUM_INFERENCE_STEPS:-6}
+VAL_MASK_DILATION_ITER=${VAL_MASK_DILATION_ITER:-0}
+RESOLUTION=${RESOLUTION:-512}
 NFRAMES=${NFRAMES:-16}
 SEED=${SEED:-42}
 MIXED_PRECISION=${MIXED_PRECISION:-bf16}
@@ -176,6 +179,9 @@ python training/dpo/scripts/run_stage2.py \
   --checkpointing_steps ${CKPT_STEPS} \
   --checkpoints_total_limit ${CKPT_LIMIT} \
   --validation_steps ${VAL_STEPS} \
+  --val_num_inference_steps ${VAL_NUM_INFERENCE_STEPS} \
+  --val_mask_dilation_iter ${VAL_MASK_DILATION_ITER} \
+  --resolution ${RESOLUTION} \
   --nframes ${NFRAMES} \
   --seed ${SEED} \
   --mixed_precision ${MIXED_PRECISION} \
