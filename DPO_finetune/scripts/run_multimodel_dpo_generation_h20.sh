@@ -13,6 +13,7 @@ PROJECT_ROOT="${PROJECT_ROOT:-${DEFAULT_PROJECT_ROOT}}"
 DIFFUERASER_ENV="${DIFFUERASER_ENV:-/home/nvme01/conda_envs/diffueraser}"
 DATA="${DATA:-${PROJECT_ROOT}/data}"
 THIRD_PARTY_ROOT="${THIRD_PARTY_ROOT:-${DATA}/third_party_video_inpainting}"
+PROJECT_THIRD_PARTY_ROOT="${PROJECT_ROOT}/third_party_video_inpainting"
 OUT_ROOT="${OUT_ROOT:-${DATA}/DPO_Finetune_Data_Multimodel_v1}"
 YTBV_ROOT="${YTBV_ROOT:-${DATA}/external/ytbv_2019_full_resolution/train/JPEGImages}"
 DAVIS_ROOT="${DAVIS_ROOT:-${DATA}/external/davis_2017_full_resolution/DAVIS/JPEGImages/Full-Resolution}"
@@ -27,8 +28,22 @@ fi
 
 DEFAULT_GPUS="0,1,2,3,4,5,6,7"
 export CUDA_VISIBLE_DEVICES="${CUDA_VISIBLE_DEVICES:-${DEFAULT_GPUS}}"
+
+# Some older H20 setups kept code/envs under ${PROJECT_ROOT}/third_party_video_inpainting
+# while the data archive stores weights under ${DATA}/third_party_video_inpainting.
+# Bridge them so a single THIRD_PARTY_ROOT works for adapters, scoring, and Slurm.
+mkdir -p "${THIRD_PARTY_ROOT}"
+if [[ "${THIRD_PARTY_ROOT}" != "${PROJECT_THIRD_PARTY_ROOT}" && -d "${PROJECT_THIRD_PARTY_ROOT}" ]]; then
+  for subdir in repos envs weights; do
+    if [[ ! -e "${THIRD_PARTY_ROOT}/${subdir}" && -e "${PROJECT_THIRD_PARTY_ROOT}/${subdir}" ]]; then
+      ln -s "${PROJECT_THIRD_PARTY_ROOT}/${subdir}" "${THIRD_PARTY_ROOT}/${subdir}"
+    fi
+  done
+fi
+
 export VBENCH_ROOT="${VBENCH_ROOT:-${THIRD_PARTY_ROOT}/repos/VBench}"
 export VBENCH_CACHE_DIR="${VBENCH_CACHE_DIR:-${THIRD_PARTY_ROOT}/weights/vbench_cache}"
+export PYTHONPATH="${PROJECT_ROOT}:${VBENCH_ROOT}${PYTHONPATH:+:${PYTHONPATH}}"
 VBENCH_DIMENSIONS="${VBENCH_DIMENSIONS:-subject_consistency,background_consistency,temporal_flickering,motion_smoothness,aesthetic_quality}"
 
 remove_vbench_dimension() {
@@ -44,15 +59,23 @@ PY
 
 if [[ "${ENABLE_VBENCH:-0}" == "1" ]]; then
   echo "[run] verify VBench scoring deps in ${DIFFUERASER_ENV}"
+  if [[ ! -d "${VBENCH_ROOT}/vbench" ]]; then
+    echo "[run][error] VBench repo not found at ${VBENCH_ROOT}." >&2
+    echo "[run][error] Run DPO_finetune/scripts/setup_multimodel_h20.sh or set VBENCH_ROOT." >&2
+    exit 1
+  fi
   if ! PYTHONNOUSERSITE=1 conda run --no-capture-output -p "${DIFFUERASER_ENV}" \
-    python -c "import decord, omegaconf" >/dev/null 2>&1; then
+    python -c "import decord, omegaconf, vbench" >/dev/null 2>&1; then
     if [[ "${VBENCH_AUTO_INSTALL_DEPS:-1}" != "1" ]]; then
-      echo "[run][error] VBench requires decord and omegaconf in ${DIFFUERASER_ENV}. Set VBENCH_AUTO_INSTALL_DEPS=1 or install them." >&2
+      echo "[run][error] VBench requires decord, omegaconf, and the VBench repo in ${DIFFUERASER_ENV}/PYTHONPATH." >&2
+      echo "[run][error] Set VBENCH_AUTO_INSTALL_DEPS=1 or install deps, and check VBENCH_ROOT=${VBENCH_ROOT}." >&2
       exit 1
     fi
     echo "[run] install VBench scoring deps: decord omegaconf"
     PYTHONNOUSERSITE=1 conda run --no-capture-output -p "${DIFFUERASER_ENV}" \
       python -m pip install "decord==0.6.0" "omegaconf>=2.3.0"
+    PYTHONNOUSERSITE=1 conda run --no-capture-output -p "${DIFFUERASER_ENV}" \
+      python -c "import vbench"
   fi
 
   mkdir -p "${VBENCH_CACHE_DIR}"
