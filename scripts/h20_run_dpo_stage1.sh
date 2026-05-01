@@ -143,6 +143,13 @@ case "${XFORMERS,,}" in
     ;;
 esac
 
+ALLOW_TF32_ARG=()
+case "${ALLOW_TF32:-}" in
+  1|true|yes|on)
+    ALLOW_TF32_ARG=(--allow_tf32)
+    ;;
+esac
+
 GRADIENT_CHECKPOINTING_ARG=()
 case "${GRADIENT_CHECKPOINTING,,}" in
   0|false|no|off)
@@ -192,6 +199,9 @@ python training/dpo/scripts/run_stage1.py \
   --seed "${SEED:-42}" \
   --mixed_precision "${MIXED_PRECISION:-bf16}" \
   --vae_dtype "${VAE_DTYPE:-auto}" \
+  --policy_dtype "${POLICY_DTYPE:-auto}" \
+  --ref_dtype "${REF_DTYPE:-auto}" \
+  --text_dtype "${TEXT_DTYPE:-auto}" \
   --main_process_port "${MAIN_PROCESS_PORT}" \
   --wandb_project "${WANDB_PROJECT:-DPO_Diffueraser}" \
   "${WANDB_ENTITY_ARG[@]}" \
@@ -201,6 +211,7 @@ python training/dpo/scripts/run_stage1.py \
   --davis_oversample "${DAVIS_OVERSAMPLE:-10}" \
   "${CHUNK_ARG[@]}" \
   "${XFORMERS_ARG[@]}" \
+  "${ALLOW_TF32_ARG[@]}" \
   "${GRADIENT_CHECKPOINTING_ARG[@]}" \
   "${SPLIT_POS_NEG_FORWARD_ARG[@]}" \
   "${DEBUG_FIRST_BATCH_STAGES_ARG[@]}" \

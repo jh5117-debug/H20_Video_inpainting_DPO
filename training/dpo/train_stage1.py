@@ -115,6 +115,18 @@ def forward_stage1_pair_member(
     return model_pred
 
 
+def resolve_torch_dtype(dtype_name, default_dtype):
+    if dtype_name == "auto":
+        return default_dtype
+    if dtype_name == "fp32":
+        return torch.float32
+    if dtype_name == "bf16":
+        return torch.bfloat16
+    if dtype_name == "fp16":
+        return torch.float16
+    raise ValueError(f"Unsupported dtype: {dtype_name}")
+
+
 class TeeStream:
     """Mirror a text stream to both the original stream and a log file."""
 
@@ -771,6 +783,12 @@ def parse_args(input_args=None):
     parser.add_argument("--mixed_precision", type=str, default=None, choices=["no", "fp16", "bf16"])
     parser.add_argument("--vae_dtype", type=str, default="auto", choices=["auto", "fp32"],
                         help="VAE encode dtype. Use fp32 on H20 if half-precision VAE hits SIGFPE.")
+    parser.add_argument("--policy_dtype", type=str, default="auto", choices=["auto", "fp32"],
+                        help="Policy forward dtype. Use fp32 with mixed_precision=no if bf16 backward SIGFPEs on H20.")
+    parser.add_argument("--ref_dtype", type=str, default="auto", choices=["auto", "fp32", "bf16", "fp16"],
+                        help="Frozen ref forward dtype.")
+    parser.add_argument("--text_dtype", type=str, default="auto", choices=["auto", "fp32", "bf16", "fp16"],
+                        help="Frozen text encoder dtype.")
     parser.add_argument("--debug_first_batch_stages", action="store_true",
                         help="Print first-batch stage markers to locate hard crashes such as SIGFPE.")
     parser.add_argument("--enable_xformers_memory_efficient_attention", action="store_true")
@@ -1027,6 +1045,7 @@ def main(args):
 
     if args.allow_tf32:
         torch.backends.cuda.matmul.allow_tf32 = True
+        torch.backends.cudnn.allow_tf32 = True
 
     if args.scale_lr:
         args.learning_rate = (
@@ -1081,12 +1100,15 @@ def main(args):
     elif accelerator.mixed_precision == "bf16":
         weight_dtype = torch.bfloat16
 
-    vae_dtype = torch.float32 if args.vae_dtype == "fp32" else weight_dtype
+    vae_dtype = resolve_torch_dtype(args.vae_dtype, weight_dtype)
+    policy_dtype = resolve_torch_dtype(args.policy_dtype, weight_dtype)
+    ref_dtype = resolve_torch_dtype(args.ref_dtype, weight_dtype)
+    text_dtype = resolve_torch_dtype(args.text_dtype, weight_dtype)
 
     vae.to(accelerator.device, dtype=vae_dtype)
-    text_encoder.to(accelerator.device, dtype=weight_dtype)
-    unet_ref.to(accelerator.device, dtype=weight_dtype)
-    brushnet_ref.to(accelerator.device, dtype=weight_dtype)
+    text_encoder.to(accelerator.device, dtype=text_dtype)
+    unet_ref.to(accelerator.device, dtype=ref_dtype)
+    brushnet_ref.to(accelerator.device, dtype=ref_dtype)
 
     num_update_steps_per_epoch = math.ceil(len(train_dataloader) / args.gradient_accumulation_steps)
     if overrode_max_train_steps:
@@ -1109,6 +1131,9 @@ def main(args):
     logger.info(f"  SFT Reg Weight = {args.sft_reg_weight}")
     logger.info(f"  Lose Gap Weight = {args.lose_gap_weight}")
     logger.info(f"  VAE dtype = {vae_dtype}")
+    logger.info(f"  Policy forward dtype = {policy_dtype}")
+    logger.info(f"  Ref dtype = {ref_dtype}")
+    logger.info(f"  Text dtype = {text_dtype}")
     print_model_info({
         'unet_main (policy)': unet_main, 'brushnet (policy)': brushnet,
         'unet_ref (frozen)': unet_ref, 'brushnet_ref (frozen)': brushnet_ref,
@@ -1168,14 +1193,14 @@ def main(args):
                 pos_latents = vae.encode(
                     rearrange(batch["pixel_values_pos"], "b f c h w -> (b f) c h w").to(dtype=vae_dtype)
                 ).latent_dist.sample() * vae.config.scaling_factor
-                pos_latents = pos_latents.to(dtype=weight_dtype)
+                pos_latents = pos_latents.to(dtype=policy_dtype)
                 debug_stage("after vae pos encode")
 
                 debug_stage("before vae neg encode")
                 neg_latents = vae.encode(
                     rearrange(batch["pixel_values_neg"], "b f c h w -> (b f) c h w").to(dtype=vae_dtype)
                 ).latent_dist.sample() * vae.config.scaling_factor
-                neg_latents = neg_latents.to(dtype=weight_dtype)
+                neg_latents = neg_latents.to(dtype=policy_dtype)
                 debug_stage("after vae neg encode")
 
                 # BrushNet conditioning: GT masked image + mask
@@ -1184,12 +1209,12 @@ def main(args):
                 cond_latents = vae.encode(
                     rearrange(batch["conditioning_pixel_values"], "b f c h w -> (b f) c h w").to(dtype=vae_dtype)
                 ).latent_dist.sample() * vae.config.scaling_factor
-                cond_latents = cond_latents.to(dtype=weight_dtype)
+                cond_latents = cond_latents.to(dtype=policy_dtype)
                 cond_latents = rearrange(cond_latents, "(b f) c h w -> b f c h w", b=n_batch)
                 debug_stage("after vae conditioning encode")
 
                 masks = torch.nn.functional.interpolate(
-                    batch["masks"].to(dtype=weight_dtype),
+                    batch["masks"].to(dtype=policy_dtype),
                     size=(1, pos_latents.shape[-2], pos_latents.shape[-1])
                 )
 
@@ -1223,22 +1248,25 @@ def main(args):
                     'b t c d -> (b t) c d'
                 )
                 debug_stage("after text encoder")
+                encoder_hidden_states_policy = encoder_hidden_states_expanded.to(dtype=policy_dtype)
+                encoder_hidden_states_ref = encoder_hidden_states_expanded.to(dtype=ref_dtype)
+                brushnet_cond_ref = brushnet_cond.to(dtype=ref_dtype)
 
                 if args.split_pos_neg_forward:
                     # 顺序跑 win/lose，保持 DPO 数学等价，同时避免 pos+neg concat 的激活峰值。
                     with torch.no_grad():
                         debug_stage("before ref pos forward")
                         ref_pred_pos = forward_stage1_pair_member(
-                            brushnet_ref, unet_ref, noisy_pos, timesteps_expanded,
-                            encoder_hidden_states_expanded, brushnet_cond, weight_dtype,
+                            brushnet_ref, unet_ref, noisy_pos.to(dtype=ref_dtype), timesteps_expanded,
+                            encoder_hidden_states_ref, brushnet_cond_ref, ref_dtype,
                         )
                         debug_stage("after ref pos forward")
                         torch.cuda.empty_cache()
                         gc.collect()
                         debug_stage("before ref neg forward")
                         ref_pred_neg = forward_stage1_pair_member(
-                            brushnet_ref, unet_ref, noisy_neg, timesteps_expanded,
-                            encoder_hidden_states_expanded, brushnet_cond, weight_dtype,
+                            brushnet_ref, unet_ref, noisy_neg.to(dtype=ref_dtype), timesteps_expanded,
+                            encoder_hidden_states_ref, brushnet_cond_ref, ref_dtype,
                         )
                         debug_stage("after ref neg forward")
                         ref_pred = torch.cat([ref_pred_pos, ref_pred_neg], dim=0)
@@ -1249,7 +1277,7 @@ def main(args):
                     debug_stage("before policy pos forward")
                     model_pred_pos = forward_stage1_pair_member(
                         brushnet, unet_main, noisy_pos, timesteps_expanded,
-                        encoder_hidden_states_expanded, brushnet_cond, weight_dtype,
+                        encoder_hidden_states_policy, brushnet_cond, policy_dtype,
                     )
                     debug_stage("after policy pos forward")
                     torch.cuda.empty_cache()
@@ -1257,7 +1285,7 @@ def main(args):
                     debug_stage("before policy neg forward")
                     model_pred_neg = forward_stage1_pair_member(
                         brushnet, unet_main, noisy_neg, timesteps_expanded,
-                        encoder_hidden_states_expanded, brushnet_cond, weight_dtype,
+                        encoder_hidden_states_policy, brushnet_cond, policy_dtype,
                     )
                     debug_stage("after policy neg forward")
                     model_pred = torch.cat([model_pred_pos, model_pred_neg], dim=0)
@@ -1267,16 +1295,15 @@ def main(args):
                     noisy_all = torch.cat([noisy_pos, noisy_neg], dim=0)  # [2*b*f, 4, h, w]
                     brushnet_cond_all = torch.cat([brushnet_cond, brushnet_cond], dim=0)
                     timesteps_all = timesteps_expanded.repeat(2)  # [2*b*f]
-                    encoder_hidden_states_all = torch.cat(
-                        [encoder_hidden_states_expanded, encoder_hidden_states_expanded], dim=0
-                    )
+                    encoder_hidden_states_all = torch.cat([encoder_hidden_states_policy, encoder_hidden_states_policy], dim=0)
+                    encoder_hidden_states_ref_all = torch.cat([encoder_hidden_states_ref, encoder_hidden_states_ref], dim=0)
 
                     # === Ref forward (no_grad) ===
                     # 先算 ref，避免 policy 反向图驻留时再叠加 frozen ref 的 forward 峰值显存。
                     with torch.no_grad():
                         ref_pred = forward_stage1_pair_member(
-                            brushnet_ref, unet_ref, noisy_all, timesteps_all,
-                            encoder_hidden_states_all, brushnet_cond_all, weight_dtype,
+                            brushnet_ref, unet_ref, noisy_all.to(dtype=ref_dtype), timesteps_all,
+                            encoder_hidden_states_ref_all, brushnet_cond_all.to(dtype=ref_dtype), ref_dtype,
                         )
 
                     torch.cuda.empty_cache()
@@ -1285,9 +1312,9 @@ def main(args):
                     # === Policy forward ===
                     model_pred = forward_stage1_pair_member(
                         brushnet, unet_main, noisy_all, timesteps_all,
-                        encoder_hidden_states_all, brushnet_cond_all, weight_dtype,
+                        encoder_hidden_states_all, brushnet_cond_all, policy_dtype,
                     )
-                    del noisy_all, brushnet_cond_all, timesteps_all, encoder_hidden_states_all
+                    del noisy_all, brushnet_cond_all, timesteps_all, encoder_hidden_states_all, encoder_hidden_states_ref_all
 
                 # === DPO Loss ===
                 debug_stage("before dpo loss")

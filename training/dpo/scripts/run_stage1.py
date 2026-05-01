@@ -90,6 +90,9 @@ def build_cmd(project_root, args):
         "--val_num_inference_steps", str(args.val_num_inference_steps),
         "--val_mask_dilation_iter", str(args.val_mask_dilation_iter),
         "--vae_dtype", args.vae_dtype,
+        "--policy_dtype", args.policy_dtype,
+        "--ref_dtype", args.ref_dtype,
+        "--text_dtype", args.text_dtype,
         "--beta_dpo", str(args.beta_dpo),
         "--sft_reg_weight", str(args.sft_reg_weight),
         "--lose_gap_weight", str(args.lose_gap_weight),
@@ -103,6 +106,8 @@ def build_cmd(project_root, args):
 
     if args.enable_xformers:
         cmd.append("--enable_xformers_memory_efficient_attention")
+    if args.allow_tf32:
+        cmd.append("--allow_tf32")
     if not args.disable_gradient_checkpointing:
         cmd.append("--gradient_checkpointing")
     if args.checkpoints_total_limit:
@@ -273,8 +278,12 @@ def run(args=None):
     print(f"  LR:              {args.learning_rate}")
     print(f"  Mixed Precision: {args.mixed_precision}")
     print(f"  VAE dtype:       {args.vae_dtype}")
+    print(f"  Policy dtype:    {args.policy_dtype}")
+    print(f"  Ref dtype:       {args.ref_dtype}")
+    print(f"  Text dtype:      {args.text_dtype}")
     print(f"  Main Port:       {args.main_process_port}")
     print(f"  XFormers:        {args.enable_xformers}")
+    print(f"  TF32:            {args.allow_tf32}")
     print(f"  Grad Ckpt:       {not args.disable_gradient_checkpointing}")
     print(f"  Split Pos/Neg:   {args.split_pos_neg_forward}")
     print(f"  Debug Stages:    {args.debug_first_batch_stages}")
@@ -315,6 +324,9 @@ def parse_args():
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--mixed_precision", type=str, default="fp16")
     parser.add_argument("--vae_dtype", type=str, default="auto", choices=["auto", "fp32"])
+    parser.add_argument("--policy_dtype", type=str, default="auto", choices=["auto", "fp32"])
+    parser.add_argument("--ref_dtype", type=str, default="auto", choices=["auto", "fp32", "bf16", "fp16"])
+    parser.add_argument("--text_dtype", type=str, default="auto", choices=["auto", "fp32", "bf16", "fp16"])
     parser.add_argument("--main_process_port", type=str, default=None)
     parser.add_argument("--wandb_project", type=str, default="DPO_Diffueraser")
     parser.add_argument("--wandb_entity", type=str, default=None)
@@ -324,6 +336,7 @@ def parse_args():
     parser.add_argument("--davis_oversample", type=int, default=10)
     parser.add_argument("--chunk_aligned", action="store_true")
     parser.add_argument("--enable_xformers", action="store_true")
+    parser.add_argument("--allow_tf32", action="store_true")
     parser.add_argument("--disable_gradient_checkpointing", action="store_true")
     parser.add_argument("--split_pos_neg_forward", action="store_true")
     parser.add_argument("--debug_first_batch_stages", action="store_true")
