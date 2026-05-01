@@ -157,6 +157,13 @@ case "${SPLIT_POS_NEG_FORWARD,,}" in
     ;;
 esac
 
+DEBUG_FIRST_BATCH_STAGES_ARG=()
+case "${DEBUG_FIRST_BATCH_STAGES:-}" in
+  1|true|yes|on)
+    DEBUG_FIRST_BATCH_STAGES_ARG=(--debug_first_batch_stages)
+    ;;
+esac
+
 WANDB_ENTITY_ARG=()
 if [[ -n "${WANDB_ENTITY:-}" ]]; then
   WANDB_ENTITY_ARG=(--wandb_entity "${WANDB_ENTITY}")
@@ -196,6 +203,7 @@ python training/dpo/scripts/run_stage1.py \
   "${XFORMERS_ARG[@]}" \
   "${GRADIENT_CHECKPOINTING_ARG[@]}" \
   "${SPLIT_POS_NEG_FORWARD_ARG[@]}" \
+  "${DEBUG_FIRST_BATCH_STAGES_ARG[@]}" \
   "${REF_MODEL_ARG[@]}" \
   "${RUN_VERSION_ARG[@]}" \
   "$@"

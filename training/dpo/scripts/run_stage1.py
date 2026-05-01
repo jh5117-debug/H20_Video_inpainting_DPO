@@ -113,6 +113,8 @@ def build_cmd(project_root, args):
         cmd.append("--chunk_aligned")
     if args.split_pos_neg_forward:
         cmd.append("--split_pos_neg_forward")
+    if args.debug_first_batch_stages:
+        cmd.append("--debug_first_batch_stages")
 
     prepare_experiment_dir(
         output_dir,
@@ -275,6 +277,7 @@ def run(args=None):
     print(f"  XFormers:        {args.enable_xformers}")
     print(f"  Grad Ckpt:       {not args.disable_gradient_checkpointing}")
     print(f"  Split Pos/Neg:   {args.split_pos_neg_forward}")
+    print(f"  Debug Stages:    {args.debug_first_batch_stages}")
     print("=" * 60)
     print(f"\n  Command:\n  {' '.join(cmd[:6])} \\\n    " + " \\\n    ".join(cmd[6:]))
     print()
@@ -323,6 +326,7 @@ def parse_args():
     parser.add_argument("--enable_xformers", action="store_true")
     parser.add_argument("--disable_gradient_checkpointing", action="store_true")
     parser.add_argument("--split_pos_neg_forward", action="store_true")
+    parser.add_argument("--debug_first_batch_stages", action="store_true")
     return parser.parse_args()
 
 

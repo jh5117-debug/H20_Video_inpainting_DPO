@@ -771,6 +771,8 @@ def parse_args(input_args=None):
     parser.add_argument("--mixed_precision", type=str, default=None, choices=["no", "fp16", "bf16"])
     parser.add_argument("--vae_dtype", type=str, default="auto", choices=["auto", "fp32"],
                         help="VAE encode dtype. Use fp32 on H20 if half-precision VAE hits SIGFPE.")
+    parser.add_argument("--debug_first_batch_stages", action="store_true",
+                        help="Print first-batch stage markers to locate hard crashes such as SIGFPE.")
     parser.add_argument("--enable_xformers_memory_efficient_attention", action="store_true")
     parser.add_argument("--set_grads_to_none", action="store_true")
     parser.add_argument("--proportion_empty_prompts", type=float, default=0)
@@ -1149,6 +1151,10 @@ def main(args):
         disable=not accelerator.is_local_main_process,
     )
 
+    def debug_stage(message):
+        if args.debug_first_batch_stages and global_step == initial_global_step and accelerator.is_local_main_process:
+            print(f"[debug-stage] step={global_step} {message}", flush=True)
+
     for epoch in range(first_epoch, args.num_train_epochs):
         if hasattr(train_dataset, "set_epoch"):
             train_dataset.set_epoch(epoch)
@@ -1158,23 +1164,29 @@ def main(args):
                 gc.collect()
 
                 # === VAE Encode ===
+                debug_stage("before vae pos encode")
                 pos_latents = vae.encode(
                     rearrange(batch["pixel_values_pos"], "b f c h w -> (b f) c h w").to(dtype=vae_dtype)
                 ).latent_dist.sample() * vae.config.scaling_factor
                 pos_latents = pos_latents.to(dtype=weight_dtype)
+                debug_stage("after vae pos encode")
 
+                debug_stage("before vae neg encode")
                 neg_latents = vae.encode(
                     rearrange(batch["pixel_values_neg"], "b f c h w -> (b f) c h w").to(dtype=vae_dtype)
                 ).latent_dist.sample() * vae.config.scaling_factor
                 neg_latents = neg_latents.to(dtype=weight_dtype)
+                debug_stage("after vae neg encode")
 
                 # BrushNet conditioning: GT masked image + mask
                 n_batch = batch["conditioning_pixel_values"].shape[0]
+                debug_stage("before vae conditioning encode")
                 cond_latents = vae.encode(
                     rearrange(batch["conditioning_pixel_values"], "b f c h w -> (b f) c h w").to(dtype=vae_dtype)
                 ).latent_dist.sample() * vae.config.scaling_factor
                 cond_latents = cond_latents.to(dtype=weight_dtype)
                 cond_latents = rearrange(cond_latents, "(b f) c h w -> b f c h w", b=n_batch)
+                debug_stage("after vae conditioning encode")
 
                 masks = torch.nn.functional.interpolate(
                     batch["masks"].to(dtype=weight_dtype),
@@ -1188,6 +1200,7 @@ def main(args):
                     torch.concat([cond_latents, masks], 2),
                     "b f c h w -> (b f) c h w"
                 )  # [(b f), 5, h, w]
+                debug_stage("after brushnet conditioning build")
 
                 # === Shared noise + timestep ===
                 noise = torch.randn_like(pos_latents)
@@ -1201,41 +1214,52 @@ def main(args):
                 # 加噪: pos 和 neg 使用相同的 noise 但不同的 latent
                 noisy_pos = noise_scheduler.add_noise(pos_latents, noise, timesteps_expanded)
                 noisy_neg = noise_scheduler.add_noise(neg_latents, noise, timesteps_expanded)
+                debug_stage("after add noise")
 
+                debug_stage("before text encoder")
                 encoder_hidden_states = text_encoder(batch["input_ids"], return_dict=False)[0]
                 encoder_hidden_states_expanded = rearrange(
                     repeat(encoder_hidden_states, "b c d -> b t c d", t=args.nframes),
                     'b t c d -> (b t) c d'
                 )
+                debug_stage("after text encoder")
 
                 if args.split_pos_neg_forward:
                     # 顺序跑 win/lose，保持 DPO 数学等价，同时避免 pos+neg concat 的激活峰值。
                     with torch.no_grad():
+                        debug_stage("before ref pos forward")
                         ref_pred_pos = forward_stage1_pair_member(
                             brushnet_ref, unet_ref, noisy_pos, timesteps_expanded,
                             encoder_hidden_states_expanded, brushnet_cond, weight_dtype,
                         )
+                        debug_stage("after ref pos forward")
                         torch.cuda.empty_cache()
                         gc.collect()
+                        debug_stage("before ref neg forward")
                         ref_pred_neg = forward_stage1_pair_member(
                             brushnet_ref, unet_ref, noisy_neg, timesteps_expanded,
                             encoder_hidden_states_expanded, brushnet_cond, weight_dtype,
                         )
+                        debug_stage("after ref neg forward")
                         ref_pred = torch.cat([ref_pred_pos, ref_pred_neg], dim=0)
                     del ref_pred_pos, ref_pred_neg
                     torch.cuda.empty_cache()
                     gc.collect()
 
+                    debug_stage("before policy pos forward")
                     model_pred_pos = forward_stage1_pair_member(
                         brushnet, unet_main, noisy_pos, timesteps_expanded,
                         encoder_hidden_states_expanded, brushnet_cond, weight_dtype,
                     )
+                    debug_stage("after policy pos forward")
                     torch.cuda.empty_cache()
                     gc.collect()
+                    debug_stage("before policy neg forward")
                     model_pred_neg = forward_stage1_pair_member(
                         brushnet, unet_main, noisy_neg, timesteps_expanded,
                         encoder_hidden_states_expanded, brushnet_cond, weight_dtype,
                     )
+                    debug_stage("after policy neg forward")
                     model_pred = torch.cat([model_pred_pos, model_pred_neg], dim=0)
                     del model_pred_pos, model_pred_neg
                 else:
@@ -1266,29 +1290,38 @@ def main(args):
                     del noisy_all, brushnet_cond_all, timesteps_all, encoder_hidden_states_all
 
                 # === DPO Loss ===
+                debug_stage("before dpo loss")
                 loss, diagnostics = compute_dpo_loss(
                     model_pred, ref_pred, noise,
                     beta_dpo=args.beta_dpo,
                     sft_reg_weight=args.sft_reg_weight,
                     lose_gap_weight=args.lose_gap_weight,
                 )
+                debug_stage("after dpo loss")
                 # 跨卡 gather: 全局 implicit_acc / inside_term 统计
                 diagnostics = gather_dpo_diagnostics(diagnostics, accelerator)
+                debug_stage("after diagnostics gather")
 
                 torch.cuda.empty_cache()
                 gc.collect()
 
+                debug_stage("before backward")
                 accelerator.backward(loss)
+                debug_stage("after backward")
 
                 # DGR: 计算梯度范数（检测梯度消失）
                 grad_norm = None
                 if accelerator.sync_gradients:
+                    debug_stage("before grad norm and clip")
                     grad_norm = compute_dpo_grad_norm(loss, params_to_optimize)
                     accelerator.clip_grad_norm_(params_to_optimize, args.max_grad_norm)
+                    debug_stage("after grad norm and clip")
 
+                debug_stage("before optimizer step")
                 optimizer.step()
                 lr_scheduler.step()
                 optimizer.zero_grad(set_to_none=args.set_grads_to_none)
+                debug_stage("after optimizer step")
 
             if accelerator.sync_gradients:
                 progress_bar.update(1)
